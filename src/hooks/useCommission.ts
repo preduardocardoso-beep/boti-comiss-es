@@ -3,8 +3,8 @@ import {
   OrderRecord,
   CommissionData,
   CycleConfig,
-  INICIOS_TIERS,
-  REINICIOS_TIERS,
+  getIniciosTiers,
+  getReiniciosTiers,
   DEFAULT_CONFIG,
   CommissionTier,
 } from '@/types/commission';
@@ -105,11 +105,14 @@ export const useCommission = () => {
     const iniciosCount = data.inicios.length;
     const reiniciosCount = data.reinicios.length;
     
-    const iniciosTier = getCurrentTier(iniciosCount, INICIOS_TIERS);
-    const reiniciosTier = getCurrentTier(reiniciosCount, REINICIOS_TIERS);
+    const iniciosTiers = getIniciosTiers(data.config.iniciosMeta);
+    const reiniciosTiers = getReiniciosTiers(data.config.reiniciosMeta);
     
-    const iniciosCommission = calculateCommission(iniciosCount, INICIOS_TIERS);
-    const reiniciosCommission = calculateCommission(reiniciosCount, REINICIOS_TIERS);
+    const iniciosTier = getCurrentTier(iniciosCount, iniciosTiers);
+    const reiniciosTier = getCurrentTier(reiniciosCount, reiniciosTiers);
+    
+    const iniciosCommission = calculateCommission(iniciosCount, iniciosTiers);
+    const reiniciosCommission = calculateCommission(reiniciosCount, reiniciosTiers);
     
     const totalCommission = iniciosCommission + reiniciosCommission;
     
@@ -128,6 +131,8 @@ export const useCommission = () => {
       totalCommission,
       iniciosProgress,
       reiniciosProgress,
+      iniciosTiers,
+      reiniciosTiers,
     };
   }, [data]);
 
@@ -140,7 +145,5 @@ export const useCommission = () => {
     removeReinicio,
     updateConfig,
     resetCycle,
-    INICIOS_TIERS,
-    REINICIOS_TIERS,
   };
 };

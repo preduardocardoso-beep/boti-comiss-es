@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings, Target, Save, RotateCcw, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { CycleConfig, INICIOS_TIERS, REINICIOS_TIERS } from '@/types/commission';
+import { CycleConfig, getIniciosTiers, getReiniciosTiers, CommissionTier } from '@/types/commission';
 import { toast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -20,12 +20,16 @@ interface ConfigPanelProps {
   config: CycleConfig;
   onUpdateConfig: (config: CycleConfig) => void;
   onResetCycle: () => void;
+  iniciosTiers: CommissionTier[];
+  reiniciosTiers: CommissionTier[];
 }
 
 export const ConfigPanel = ({
   config,
   onUpdateConfig,
   onResetCycle,
+  iniciosTiers,
+  reiniciosTiers,
 }: ConfigPanelProps) => {
   const [iniciosMeta, setIniciosMeta] = useState(config.iniciosMeta.toString());
   const [reiniciosMeta, setReiniciosMeta] = useState(config.reiniciosMeta.toString());
@@ -104,10 +108,10 @@ export const ConfigPanel = ({
       {/* Fixed Tiers Info */}
       <div className="card-premium p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">
-          Gatilhos Fixos - Inícios
+          Gatilhos - Inícios (Sonho Grande = Meta)
         </h3>
         <div className="grid grid-cols-4 gap-3">
-          {INICIOS_TIERS.slice(1).map((tier) => (
+          {iniciosTiers.slice(1).map((tier) => (
             <div key={tier.name} className="text-center p-3 rounded-lg bg-muted/50">
               <p className="text-xs text-muted-foreground mb-1">{tier.name}</p>
               <p className="text-sm font-medium text-foreground">≥ {tier.threshold}</p>
@@ -121,10 +125,10 @@ export const ConfigPanel = ({
 
       <div className="card-premium p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">
-          Gatilhos Fixos - Reinícios
+          Gatilhos - Reinícios (Sonho Grande = Meta)
         </h3>
         <div className="grid grid-cols-4 gap-3">
-          {REINICIOS_TIERS.slice(1).map((tier) => (
+          {reiniciosTiers.slice(1).map((tier) => (
             <div key={tier.name} className="text-center p-3 rounded-lg bg-muted/50">
               <p className="text-xs text-muted-foreground mb-1">{tier.name}</p>
               <p className="text-sm font-medium text-foreground">≥ {tier.threshold}</p>
