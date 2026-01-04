@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, RefreshCw, Settings } from 'lucide-react';
 import { Dashboard } from '@/components/Dashboard';
@@ -6,6 +5,7 @@ import { OrderForm } from '@/components/OrderForm';
 import { OrderList } from '@/components/OrderList';
 import { CommissionSummary } from '@/components/CommissionSummary';
 import { ConfigPanel } from '@/components/ConfigPanel';
+import { ExportButton } from '@/components/ExportButton';
 import { useCommission } from '@/hooks/useCommission';
 
 const Index = () => {
@@ -18,8 +18,6 @@ const Index = () => {
     removeReinicio,
     updateConfig,
     resetCycle,
-    INICIOS_TIERS,
-    REINICIOS_TIERS,
   } = useCommission();
 
   return (
@@ -32,7 +30,25 @@ const Index = () => {
               <span className="text-primary-foreground font-bold text-sm">RV</span>
             </div>
             <span className="font-semibold text-foreground">Promotor</span>
-            <span className="text-xs text-muted-foreground ml-auto">Grupo Boticário</span>
+            <div className="ml-auto flex items-center gap-3">
+              <ExportButton
+                inicios={data.inicios}
+                reinicios={data.reinicios}
+                iniciosTiers={stats.iniciosTiers}
+                reiniciosTiers={stats.reiniciosTiers}
+                stats={{
+                  iniciosCount: stats.iniciosCount,
+                  reiniciosCount: stats.reiniciosCount,
+                  iniciosCommission: stats.iniciosCommission,
+                  reiniciosCommission: stats.reiniciosCommission,
+                  totalCommission: stats.totalCommission,
+                  iniciosTierName: stats.iniciosTier.name,
+                  reiniciosTierName: stats.reiniciosTier.name,
+                }}
+                config={data.config}
+              />
+              <span className="text-xs text-muted-foreground">Grupo Boticário</span>
+            </div>
           </div>
         </div>
       </div>
@@ -90,7 +106,7 @@ const Index = () => {
                 count={stats.iniciosCount}
                 tier={stats.iniciosTier}
                 commission={stats.iniciosCommission}
-                tiers={INICIOS_TIERS}
+                tiers={stats.iniciosTiers}
                 type="inicio"
               />
             </div>
@@ -109,7 +125,7 @@ const Index = () => {
                 count={stats.reiniciosCount}
                 tier={stats.reiniciosTier}
                 commission={stats.reiniciosCommission}
-                tiers={REINICIOS_TIERS}
+                tiers={stats.reiniciosTiers}
                 type="reinicio"
               />
             </div>
@@ -121,6 +137,8 @@ const Index = () => {
               config={data.config}
               onUpdateConfig={updateConfig}
               onResetCycle={resetCycle}
+              iniciosTiers={stats.iniciosTiers}
+              reiniciosTiers={stats.reiniciosTiers}
             />
           </TabsContent>
         </Tabs>
