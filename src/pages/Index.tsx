@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, RefreshCw, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, RefreshCw, Settings, LogOut, Loader2 } from 'lucide-react';
 import { Dashboard } from '@/components/Dashboard';
 import { OrderForm } from '@/components/OrderForm';
 import { OrderList } from '@/components/OrderList';
@@ -7,11 +10,15 @@ import { CommissionSummary } from '@/components/CommissionSummary';
 import { ConfigPanel } from '@/components/ConfigPanel';
 import { ExportButton } from '@/components/ExportButton';
 import { useCommission } from '@/hooks/useCommission';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { user, loading: authLoading, signOut } = useAuth();
   const {
     data,
     stats,
+    loading: dataLoading,
     addInicio,
     addReinicio,
     removeInicio,
@@ -19,6 +26,32 @@ const Index = () => {
     updateConfig,
     resetCycle,
   } = useCommission();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [authLoading, user, navigate]);
+
+  if (authLoading || dataLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,7 +80,10 @@ const Index = () => {
                 }}
                 config={data.config}
               />
-              <span className="text-xs text-muted-foreground">Grupo Boticário</span>
+              <span className="text-xs text-muted-foreground hidden sm:block">{user.email}</span>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
