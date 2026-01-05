@@ -1,17 +1,15 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import {
   OrderRecord,
-  CommissionData,
   CycleConfig,
   getIniciosTiers,
   getReiniciosTiers,
   DEFAULT_CONFIG,
   CommissionTier,
 } from '@/types/commission';
-
-const generateId = () => Math.random().toString(36).substr(2, 9);
-
-const getToday = () => new Date().toISOString().split('T')[0];
 
 export const getCurrentTier = (count: number, tiers: CommissionTier[]): CommissionTier => {
   let currentTier = tiers[0];
@@ -29,84 +27,230 @@ export const calculateCommission = (count: number, tiers: CommissionTier[]): num
 };
 
 export const useCommission = () => {
-  const [data, setData] = useState<CommissionData>(() => {
-    const saved = localStorage.getItem('rv-promotor-data');
-    if (saved) {
-      return JSON.parse(saved);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [inicios, setInicios] = useState<OrderRecord[]>([]);
+  const [reinicios, setReinicios] = useState<OrderRecord[]>([]);
+  const [config, setConfig] = useState<CycleConfig>(DEFAULT_CONFIG);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data on mount
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
     }
-    return {
-      inicios: [],
-      reinicios: [],
-      config: DEFAULT_CONFIG,
+
+    const fetchData = async () => {
+      setLoading(true);
+      
+      // Fetch config
+      const { data: configData } = await supabase
+        .from('cycle_config')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (configData) {
+        setConfig({
+          iniciosMeta: configData.inicios_meta,
+          reiniciosMeta: configData.reinicios_meta,
+        });
+      } else {
+        // Create default config for new user
+        await supabase.from('cycle_config').insert({
+          user_id: user.id,
+          inicios_meta: DEFAULT_CONFIG.iniciosMeta,
+          reinicios_meta: DEFAULT_CONFIG.reiniciosMeta,
+        });
+      }
+
+      // Fetch orders
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (ordersData) {
+        const iniciosData = ordersData
+          .filter((o) => o.type === 'inicio')
+          .map((o) => ({
+            id: o.id,
+            clientName: o.client_name,
+            orderNumber: o.order_number,
+            date: o.created_at.split('T')[0],
+          }));
+        const reiniciosData = ordersData
+          .filter((o) => o.type === 'reinicio')
+          .map((o) => ({
+            id: o.id,
+            clientName: o.client_name,
+            orderNumber: o.order_number,
+            date: o.created_at.split('T')[0],
+          }));
+        setInicios(iniciosData);
+        setReinicios(reiniciosData);
+      }
+
+      setLoading(false);
     };
-  });
 
-  const saveData = useCallback((newData: CommissionData) => {
-    setData(newData);
-    localStorage.setItem('rv-promotor-data', JSON.stringify(newData));
-  }, []);
+    fetchData();
+  }, [user]);
 
-  const addInicio = useCallback((clientName: string, orderNumber: string) => {
-    const newRecord: OrderRecord = {
-      id: generateId(),
-      clientName: clientName.trim(),
-      orderNumber: orderNumber.trim(),
-      date: getToday(),
-    };
-    saveData({
-      ...data,
-      inicios: [...data.inicios, newRecord],
-    });
-  }, [data, saveData]);
+  const addInicio = useCallback(async (clientName: string, orderNumber: string) => {
+    if (!user) return;
 
-  const addReinicio = useCallback((clientName: string, orderNumber: string) => {
-    const newRecord: OrderRecord = {
-      id: generateId(),
-      clientName: clientName.trim(),
-      orderNumber: orderNumber.trim(),
-      date: getToday(),
-    };
-    saveData({
-      ...data,
-      reinicios: [...data.reinicios, newRecord],
-    });
-  }, [data, saveData]);
+    const { data, error } = await supabase
+      .from('orders')
+      .insert({
+        user_id: user.id,
+        type: 'inicio',
+        client_name: clientName.trim(),
+        order_number: orderNumber.trim(),
+      })
+      .select()
+      .single();
 
-  const removeInicio = useCallback((id: string) => {
-    saveData({
-      ...data,
-      inicios: data.inicios.filter((r) => r.id !== id),
-    });
-  }, [data, saveData]);
+    if (error) {
+      toast({
+        title: 'Erro ao adicionar',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
 
-  const removeReinicio = useCallback((id: string) => {
-    saveData({
-      ...data,
-      reinicios: data.reinicios.filter((r) => r.id !== id),
-    });
-  }, [data, saveData]);
+    if (data) {
+      setInicios((prev) => [
+        {
+          id: data.id,
+          clientName: data.client_name,
+          orderNumber: data.order_number,
+          date: data.created_at.split('T')[0],
+        },
+        ...prev,
+      ]);
+    }
+  }, [user, toast]);
 
-  const updateConfig = useCallback((config: CycleConfig) => {
-    saveData({
-      ...data,
-      config,
-    });
-  }, [data, saveData]);
+  const addReinicio = useCallback(async (clientName: string, orderNumber: string) => {
+    if (!user) return;
 
-  const resetCycle = useCallback(() => {
-    saveData({
-      inicios: [],
-      reinicios: [],
-      config: data.config,
-    });
-  }, [data.config, saveData]);
+    const { data, error } = await supabase
+      .from('orders')
+      .insert({
+        user_id: user.id,
+        type: 'reinicio',
+        client_name: clientName.trim(),
+        order_number: orderNumber.trim(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: 'Erro ao adicionar',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (data) {
+      setReinicios((prev) => [
+        {
+          id: data.id,
+          clientName: data.client_name,
+          orderNumber: data.order_number,
+          date: data.created_at.split('T')[0],
+        },
+        ...prev,
+      ]);
+    }
+  }, [user, toast]);
+
+  const removeInicio = useCallback(async (id: string) => {
+    const { error } = await supabase.from('orders').delete().eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'Erro ao remover',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setInicios((prev) => prev.filter((r) => r.id !== id));
+  }, [toast]);
+
+  const removeReinicio = useCallback(async (id: string) => {
+    const { error } = await supabase.from('orders').delete().eq('id', id);
+
+    if (error) {
+      toast({
+        title: 'Erro ao remover',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setReinicios((prev) => prev.filter((r) => r.id !== id));
+  }, [toast]);
+
+  const updateConfig = useCallback(async (newConfig: CycleConfig) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('cycle_config')
+      .update({
+        inicios_meta: newConfig.iniciosMeta,
+        reinicios_meta: newConfig.reiniciosMeta,
+      })
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast({
+        title: 'Erro ao atualizar',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setConfig(newConfig);
+  }, [user, toast]);
+
+  const resetCycle = useCallback(async () => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast({
+        title: 'Erro ao resetar',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setInicios([]);
+    setReinicios([]);
+  }, [user, toast]);
 
   const stats = useMemo(() => {
-    const iniciosCount = data.inicios.length;
-    const reiniciosCount = data.reinicios.length;
+    const iniciosCount = inicios.length;
+    const reiniciosCount = reinicios.length;
     
-    const iniciosTiers = getIniciosTiers(data.config.iniciosMeta);
-    const reiniciosTiers = getReiniciosTiers(data.config.reiniciosMeta);
+    const iniciosTiers = getIniciosTiers(config.iniciosMeta);
+    const reiniciosTiers = getReiniciosTiers(config.reiniciosMeta);
     
     const iniciosTier = getCurrentTier(iniciosCount, iniciosTiers);
     const reiniciosTier = getCurrentTier(reiniciosCount, reiniciosTiers);
@@ -116,8 +260,8 @@ export const useCommission = () => {
     
     const totalCommission = iniciosCommission + reiniciosCommission;
     
-    const iniciosProgress = Math.min((iniciosCount / data.config.iniciosMeta) * 100, 100);
-    const reiniciosProgress = Math.min((reiniciosCount / data.config.reiniciosMeta) * 100, 100);
+    const iniciosProgress = Math.min((iniciosCount / config.iniciosMeta) * 100, 100);
+    const reiniciosProgress = Math.min((reiniciosCount / config.reiniciosMeta) * 100, 100);
 
     return {
       iniciosCount,
@@ -134,11 +278,12 @@ export const useCommission = () => {
       iniciosTiers,
       reiniciosTiers,
     };
-  }, [data]);
+  }, [inicios, reinicios, config]);
 
   return {
-    data,
+    data: { inicios, reinicios, config },
     stats,
+    loading,
     addInicio,
     addReinicio,
     removeInicio,
