@@ -1,4 +1,4 @@
-import { DollarSign, TrendingUp, Award } from 'lucide-react';
+import { TrendingUp, Award, Trophy, Rocket } from 'lucide-react';
 import { CommissionTier } from '@/types/commission';
 
 interface CommissionSummaryProps {
@@ -12,17 +12,73 @@ interface CommissionSummaryProps {
 export const CommissionSummary = ({
   count,
   tier,
-  commission,
   tiers,
+  commission,
   type,
 }: CommissionSummaryProps) => {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   const nextTier = tiers.find((t) => t.threshold > count);
+  
+  // Sonho Grande thresholds
+  const sonhoGrandeThreshold = type === 'inicio' ? 11 : 15;
+  const remainingToSonhoGrande = Math.max(0, sonhoGrandeThreshold - count);
+  const reachedSonhoGrande = count >= sonhoGrandeThreshold;
+
+  const getMotivationalMessage = () => {
+    if (reachedSonhoGrande) {
+      return null; // Will show congratulations card instead
+    }
+    
+    const percentage = (count / sonhoGrandeThreshold) * 100;
+    
+    if (percentage >= 80) {
+      return `Faltam apenas ${remainingToSonhoGrande} ${type === 'inicio' ? 'início' : 'reinício'}${remainingToSonhoGrande > 1 ? 's' : ''} para o Sonho Grande! Você está quase lá! 🔥`;
+    } else if (percentage >= 50) {
+      return `Faltam ${remainingToSonhoGrande} ${type === 'inicio' ? 'inícios' : 'reinícios'} para o Sonho Grande. Continue assim! 💪`;
+    } else if (percentage >= 25) {
+      return `Faltam ${remainingToSonhoGrande} ${type === 'inicio' ? 'inícios' : 'reinícios'} para alcançar o Sonho Grande. Você consegue! 🚀`;
+    } else {
+      return `Faltam ${remainingToSonhoGrande} ${type === 'inicio' ? 'inícios' : 'reinícios'} para o Sonho Grande. Bora começar! ✨`;
+    }
+  };
+
+  const motivationalMessage = getMotivationalMessage();
 
   return (
     <div className="space-y-4">
+      {/* Congratulations Card - when Sonho Grande is reached */}
+      {reachedSonhoGrande && (
+        <div className="card-premium p-5 gradient-gold animate-pulse-success">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-full bg-primary-foreground/20">
+              <Trophy className="h-8 w-8 text-primary-foreground" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-primary-foreground">
+                🎉 Parabéns! Sonho Grande alcançado!
+              </h3>
+              <p className="text-sm text-primary-foreground/90">
+                Você bateu a meta máxima de {type === 'inicio' ? 'Inícios' : 'Reinícios'}! Incrível trabalho!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Motivational Message - when still working towards Sonho Grande */}
+      {motivationalMessage && (
+        <div className="card-premium p-4 border-l-4 border-primary bg-primary/5">
+          <div className="flex items-center gap-3">
+            <Rocket className="h-5 w-5 text-primary flex-shrink-0" />
+            <p className="text-sm font-medium text-foreground">
+              {motivationalMessage}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Current Stats */}
       <div className="card-premium p-5">
         <h4 className="text-sm font-medium text-muted-foreground mb-4">
