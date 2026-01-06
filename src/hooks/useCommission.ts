@@ -9,6 +9,8 @@ import {
   getReiniciosTiers,
   DEFAULT_CONFIG,
   CommissionTier,
+  DEFAULT_INICIO_THRESHOLDS,
+  DEFAULT_REINICIO_THRESHOLDS,
 } from '@/types/commission';
 
 export const getCurrentTier = (count: number, tiers: CommissionTier[]): CommissionTier => {
@@ -55,6 +57,16 @@ export const useCommission = () => {
         setConfig({
           iniciosMeta: configData.inicios_meta,
           reiniciosMeta: configData.reinicios_meta,
+          inicioThresholds: {
+            gatilho: configData.inicio_gatilho,
+            meta: configData.inicio_meta,
+            superMeta: configData.inicio_super_meta,
+          },
+          reinicioThresholds: {
+            gatilho: configData.reinicio_gatilho,
+            meta: configData.reinicio_meta,
+            superMeta: configData.reinicio_super_meta,
+          },
         });
       } else {
         // Create default config for new user
@@ -62,6 +74,12 @@ export const useCommission = () => {
           user_id: user.id,
           inicios_meta: DEFAULT_CONFIG.iniciosMeta,
           reinicios_meta: DEFAULT_CONFIG.reiniciosMeta,
+          inicio_gatilho: DEFAULT_INICIO_THRESHOLDS.gatilho,
+          inicio_meta: DEFAULT_INICIO_THRESHOLDS.meta,
+          inicio_super_meta: DEFAULT_INICIO_THRESHOLDS.superMeta,
+          reinicio_gatilho: DEFAULT_REINICIO_THRESHOLDS.gatilho,
+          reinicio_meta: DEFAULT_REINICIO_THRESHOLDS.meta,
+          reinicio_super_meta: DEFAULT_REINICIO_THRESHOLDS.superMeta,
         });
       }
 
@@ -209,6 +227,12 @@ export const useCommission = () => {
       .update({
         inicios_meta: newConfig.iniciosMeta,
         reinicios_meta: newConfig.reiniciosMeta,
+        inicio_gatilho: newConfig.inicioThresholds.gatilho,
+        inicio_meta: newConfig.inicioThresholds.meta,
+        inicio_super_meta: newConfig.inicioThresholds.superMeta,
+        reinicio_gatilho: newConfig.reinicioThresholds.gatilho,
+        reinicio_meta: newConfig.reinicioThresholds.meta,
+        reinicio_super_meta: newConfig.reinicioThresholds.superMeta,
       })
       .eq('user_id', user.id);
 
@@ -249,8 +273,8 @@ export const useCommission = () => {
     const iniciosCount = inicios.length;
     const reiniciosCount = reinicios.length;
     
-    const iniciosTiers = getIniciosTiers(config.iniciosMeta);
-    const reiniciosTiers = getReiniciosTiers(config.reiniciosMeta);
+    const iniciosTiers = getIniciosTiers(config.iniciosMeta, config.inicioThresholds);
+    const reiniciosTiers = getReiniciosTiers(config.reiniciosMeta, config.reinicioThresholds);
     
     const iniciosTier = getCurrentTier(iniciosCount, iniciosTiers);
     const reiniciosTier = getCurrentTier(reiniciosCount, reiniciosTiers);

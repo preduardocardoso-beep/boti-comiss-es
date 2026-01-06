@@ -18,7 +18,13 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          inicio_gatilho: number
+          inicio_meta: number
+          inicio_super_meta: number
           inicios_meta: number
+          reinicio_gatilho: number
+          reinicio_meta: number
+          reinicio_super_meta: number
           reinicios_meta: number
           updated_at: string
           user_id: string
@@ -26,7 +32,13 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          inicio_gatilho?: number
+          inicio_meta?: number
+          inicio_super_meta?: number
           inicios_meta?: number
+          reinicio_gatilho?: number
+          reinicio_meta?: number
+          reinicio_super_meta?: number
           reinicios_meta?: number
           updated_at?: string
           user_id: string
@@ -34,7 +46,13 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          inicio_gatilho?: number
+          inicio_meta?: number
+          inicio_super_meta?: number
           inicios_meta?: number
+          reinicio_gatilho?: number
+          reinicio_meta?: number
+          reinicio_super_meta?: number
           reinicios_meta?: number
           updated_at?: string
           user_id?: string
