@@ -7,6 +7,7 @@ interface CommissionSummaryProps {
   commission: number;
   tiers: CommissionTier[];
   type: 'inicio' | 'reinicio';
+  cycleMeta: number;
 }
 
 export const CommissionSummary = ({
@@ -15,32 +16,32 @@ export const CommissionSummary = ({
   tiers,
   commission,
   type,
+  cycleMeta,
 }: CommissionSummaryProps) => {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   const nextTier = tiers.find((t) => t.threshold > count);
   
-  // Sonho Grande thresholds
-  const sonhoGrandeThreshold = type === 'inicio' ? 11 : 15;
-  const remainingToSonhoGrande = Math.max(0, sonhoGrandeThreshold - count);
-  const reachedSonhoGrande = count >= sonhoGrandeThreshold;
+  // Use the cycle meta (Sonho Grande threshold)
+  const remainingToMeta = Math.max(0, cycleMeta - count);
+  const reachedMeta = count >= cycleMeta;
 
   const getMotivationalMessage = () => {
-    if (reachedSonhoGrande) {
+    if (reachedMeta) {
       return null; // Will show congratulations card instead
     }
     
-    const percentage = (count / sonhoGrandeThreshold) * 100;
+    const percentage = (count / cycleMeta) * 100;
     
     if (percentage >= 80) {
-      return `Faltam apenas ${remainingToSonhoGrande} ${type === 'inicio' ? 'início' : 'reinício'}${remainingToSonhoGrande > 1 ? 's' : ''} para o Sonho Grande! Você está quase lá! 🔥`;
+      return `Faltam apenas ${remainingToMeta} ${type === 'inicio' ? 'início' : 'reinício'}${remainingToMeta > 1 ? 's' : ''} para o Sonho Grande! Você está quase lá! 🔥`;
     } else if (percentage >= 50) {
-      return `Faltam ${remainingToSonhoGrande} ${type === 'inicio' ? 'inícios' : 'reinícios'} para o Sonho Grande. Continue assim! 💪`;
+      return `Faltam ${remainingToMeta} ${type === 'inicio' ? 'inícios' : 'reinícios'} para o Sonho Grande. Continue assim! 💪`;
     } else if (percentage >= 25) {
-      return `Faltam ${remainingToSonhoGrande} ${type === 'inicio' ? 'inícios' : 'reinícios'} para alcançar o Sonho Grande. Você consegue! 🚀`;
+      return `Faltam ${remainingToMeta} ${type === 'inicio' ? 'inícios' : 'reinícios'} para alcançar o Sonho Grande. Você consegue! 🚀`;
     } else {
-      return `Faltam ${remainingToSonhoGrande} ${type === 'inicio' ? 'inícios' : 'reinícios'} para o Sonho Grande. Bora começar! ✨`;
+      return `Faltam ${remainingToMeta} ${type === 'inicio' ? 'inícios' : 'reinícios'} para o Sonho Grande. Bora começar! ✨`;
     }
   };
 
@@ -48,8 +49,8 @@ export const CommissionSummary = ({
 
   return (
     <div className="space-y-4">
-      {/* Congratulations Card - when Sonho Grande is reached */}
-      {reachedSonhoGrande && (
+      {/* Congratulations Card - when Sonho Grande (Meta) is reached */}
+      {reachedMeta && (
         <div className="card-premium p-5 gradient-gold animate-pulse-success">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-full bg-primary-foreground/20">

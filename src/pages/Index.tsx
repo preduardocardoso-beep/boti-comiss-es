@@ -144,6 +144,7 @@ const Index = () => {
                 commission={stats.iniciosCommission}
                 tiers={stats.iniciosTiers}
                 type="inicio"
+                cycleMeta={data.config.iniciosMeta}
               />
             </div>
           </TabsContent>
@@ -163,6 +164,7 @@ const Index = () => {
                 commission={stats.reiniciosCommission}
                 tiers={stats.reiniciosTiers}
                 type="reinicio"
+                cycleMeta={data.config.reiniciosMeta}
               />
             </div>
           </TabsContent>

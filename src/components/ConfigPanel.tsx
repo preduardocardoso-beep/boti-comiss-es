@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Settings, Target, Save, RotateCcw, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { CycleConfig, getIniciosTiers, getReiniciosTiers, CommissionTier } from '@/types/commission';
+import { CycleConfig, CommissionTier } from '@/types/commission';
 import { toast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -33,19 +33,49 @@ export const ConfigPanel = ({
 }: ConfigPanelProps) => {
   const [iniciosMeta, setIniciosMeta] = useState(config.iniciosMeta.toString());
   const [reiniciosMeta, setReiniciosMeta] = useState(config.reiniciosMeta.toString());
+  
+  // Thresholds for Inícios
+  const [inicioGatilho, setInicioGatilho] = useState(config.inicioThresholds.gatilho.toString());
+  const [inicioMetaThreshold, setInicioMetaThreshold] = useState(config.inicioThresholds.meta.toString());
+  const [inicioSuperMeta, setInicioSuperMeta] = useState(config.inicioThresholds.superMeta.toString());
+  
+  // Thresholds for Reinícios
+  const [reinicioGatilho, setReinicioGatilho] = useState(config.reinicioThresholds.gatilho.toString());
+  const [reinicioMetaThreshold, setReinicioMetaThreshold] = useState(config.reinicioThresholds.meta.toString());
+  const [reinicioSuperMeta, setReinicioSuperMeta] = useState(config.reinicioThresholds.superMeta.toString());
+
+  useEffect(() => {
+    setIniciosMeta(config.iniciosMeta.toString());
+    setReiniciosMeta(config.reiniciosMeta.toString());
+    setInicioGatilho(config.inicioThresholds.gatilho.toString());
+    setInicioMetaThreshold(config.inicioThresholds.meta.toString());
+    setInicioSuperMeta(config.inicioThresholds.superMeta.toString());
+    setReinicioGatilho(config.reinicioThresholds.gatilho.toString());
+    setReinicioMetaThreshold(config.reinicioThresholds.meta.toString());
+    setReinicioSuperMeta(config.reinicioThresholds.superMeta.toString());
+  }, [config]);
 
   const handleSave = () => {
-    const newInicios = parseInt(iniciosMeta) || 25;
-    const newReinicios = parseInt(reiniciosMeta) || 15;
+    const newConfig: CycleConfig = {
+      iniciosMeta: Math.max(1, parseInt(iniciosMeta) || 25),
+      reiniciosMeta: Math.max(1, parseInt(reiniciosMeta) || 15),
+      inicioThresholds: {
+        gatilho: Math.max(1, parseInt(inicioGatilho) || 4),
+        meta: Math.max(1, parseInt(inicioMetaThreshold) || 7),
+        superMeta: Math.max(1, parseInt(inicioSuperMeta) || 9),
+      },
+      reinicioThresholds: {
+        gatilho: Math.max(1, parseInt(reinicioGatilho) || 4),
+        meta: Math.max(1, parseInt(reinicioMetaThreshold) || 9),
+        superMeta: Math.max(1, parseInt(reinicioSuperMeta) || 13),
+      },
+    };
     
-    onUpdateConfig({
-      iniciosMeta: Math.max(1, newInicios),
-      reiniciosMeta: Math.max(1, newReinicios),
-    });
+    onUpdateConfig(newConfig);
     
     toast({
       title: "Configurações salvas!",
-      description: "As metas do ciclo foram atualizadas.",
+      description: "As metas e gatilhos do ciclo foram atualizados.",
     });
   };
 
@@ -62,11 +92,11 @@ export const ConfigPanel = ({
 
   return (
     <div className="space-y-6">
-      {/* Config Form */}
+      {/* Metas do Ciclo */}
       <div className="card-premium p-6">
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-6">
           <Settings className="h-5 w-5 text-primary" />
-          Metas do Ciclo
+          Metas do Ciclo (Sonho Grande)
         </h3>
         
         <div className="grid sm:grid-cols-2 gap-6">
@@ -98,17 +128,108 @@ export const ConfigPanel = ({
             />
           </div>
         </div>
-        
-        <Button onClick={handleSave} className="w-full mt-6 h-11">
-          <Save className="h-4 w-4 mr-2" />
-          Salvar Configurações
-        </Button>
       </div>
 
-      {/* Fixed Tiers Info */}
+      {/* Gatilhos Inícios */}
       <div className="card-premium p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">
-          Gatilhos - Inícios (Sonho Grande = Meta)
+          Gatilhos - Inícios
+        </h3>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Gatilho (≥)</label>
+            <Input
+              type="number"
+              min="1"
+              value={inicioGatilho}
+              onChange={(e) => setInicioGatilho(e.target.value)}
+              className="h-10"
+            />
+            <p className="text-xs text-primary font-medium">{formatCurrency(10)}/un</p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Meta (≥)</label>
+            <Input
+              type="number"
+              min="1"
+              value={inicioMetaThreshold}
+              onChange={(e) => setInicioMetaThreshold(e.target.value)}
+              className="h-10"
+            />
+            <p className="text-xs text-primary font-medium">{formatCurrency(20)}/un</p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Super Meta (≥)</label>
+            <Input
+              type="number"
+              min="1"
+              value={inicioSuperMeta}
+              onChange={(e) => setInicioSuperMeta(e.target.value)}
+              className="h-10"
+            />
+            <p className="text-xs text-primary font-medium">{formatCurrency(35)}/un</p>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">
+          Sonho Grande = Meta do Ciclo ({iniciosMeta}) → {formatCurrency(45)}/un
+        </p>
+      </div>
+
+      {/* Gatilhos Reinícios */}
+      <div className="card-premium p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">
+          Gatilhos - Reinícios
+        </h3>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Gatilho (≥)</label>
+            <Input
+              type="number"
+              min="1"
+              value={reinicioGatilho}
+              onChange={(e) => setReinicioGatilho(e.target.value)}
+              className="h-10"
+            />
+            <p className="text-xs text-primary font-medium">{formatCurrency(5)}/un</p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Meta (≥)</label>
+            <Input
+              type="number"
+              min="1"
+              value={reinicioMetaThreshold}
+              onChange={(e) => setReinicioMetaThreshold(e.target.value)}
+              className="h-10"
+            />
+            <p className="text-xs text-primary font-medium">{formatCurrency(10)}/un</p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Super Meta (≥)</label>
+            <Input
+              type="number"
+              min="1"
+              value={reinicioSuperMeta}
+              onChange={(e) => setReinicioSuperMeta(e.target.value)}
+              className="h-10"
+            />
+            <p className="text-xs text-primary font-medium">{formatCurrency(15)}/un</p>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">
+          Sonho Grande = Meta do Ciclo ({reiniciosMeta}) → {formatCurrency(20)}/un
+        </p>
+      </div>
+
+      {/* Save Button */}
+      <Button onClick={handleSave} className="w-full h-11">
+        <Save className="h-4 w-4 mr-2" />
+        Salvar Configurações
+      </Button>
+
+      {/* Current Tiers Display */}
+      <div className="card-premium p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">
+          Resumo Gatilhos - Inícios
         </h3>
         <div className="grid grid-cols-4 gap-3">
           {iniciosTiers.slice(1).map((tier) => (
@@ -125,7 +246,7 @@ export const ConfigPanel = ({
 
       <div className="card-premium p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">
-          Gatilhos - Reinícios (Sonho Grande = Meta)
+          Resumo Gatilhos - Reinícios
         </h3>
         <div className="grid grid-cols-4 gap-3">
           {reiniciosTiers.slice(1).map((tier) => (
