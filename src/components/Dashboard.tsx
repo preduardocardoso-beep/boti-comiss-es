@@ -101,8 +101,8 @@ export const Dashboard = ({
           <Sparkles className="h-6 w-6 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">RV Promotor</h1>
-          <p className="text-sm text-muted-foreground">Controle de Comissões</p>
+          <h1 className="text-2xl font-bold text-foreground">Painel Promotores</h1>
+          <p className="text-sm text-muted-foreground">Controle de Resultados</p>
         </div>
       </div>
 
