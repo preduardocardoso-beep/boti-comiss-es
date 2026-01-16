@@ -1,51 +1,44 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Users, RefreshCw, Settings, LogOut, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useCommission } from '@/hooks/useCommission';
 import { Dashboard } from '@/components/Dashboard';
 import { OrderForm } from '@/components/OrderForm';
 import { OrderList } from '@/components/OrderList';
 import { CommissionSummary } from '@/components/CommissionSummary';
 import { ConfigPanel } from '@/components/ConfigPanel';
 import { ExportButton } from '@/components/ExportButton';
-import { useCommission } from '@/hooks/useCommission';
-import { useAuth } from '@/hooks/useAuth';
+import { FinancialProjection } from '@/components/FinancialProjection';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
-  const {
-    data,
-    stats,
-    loading: dataLoading,
-    addInicio,
-    addReinicio,
-    removeInicio,
+  const { 
+    data, 
+    stats, 
+    loading: dataLoading, 
+    addInicio, 
+    addReinicio, 
+    removeInicio, 
     removeReinicio,
     updateConfig,
-    resetCycle,
+    resetCycle
   } = useCommission();
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [authLoading, user, navigate]);
+  // Redirect to auth if not logged in
+  if (!authLoading && !user) {
+    navigate('/auth');
+    return null;
+  }
 
   if (authLoading || dataLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   const handleSignOut = async () => {
@@ -53,44 +46,57 @@ const Index = () => {
     navigate('/auth');
   };
 
+  // Get next tier values for projection
+  const getNextTierValue = (tiers: { threshold: number; value: number }[], currentCount: number) => {
+    const nextTier = tiers.find(t => t.threshold > currentCount);
+    return nextTier ? nextTier.value : tiers[tiers.length - 1]?.value || 0;
+  };
+
+  const nextInicioTierValue = getNextTierValue(stats.iniciosTiers, data.inicios.length);
+  const nextReinicioTierValue = getNextTierValue(stats.reiniciosTiers, data.reinicios.length);
+  
+  // Sonho Grande values (last tier)
+  const sonhoGrandeInicioValue = stats.iniciosTiers[stats.iniciosTiers.length - 1]?.value || 45;
+  const sonhoGrandeReinicioValue = stats.reiniciosTiers[stats.reiniciosTiers.length - 1]?.value || 20;
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header Bar */}
-      <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container max-w-6xl py-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">RV</span>
-            </div>
-            <span className="font-semibold text-foreground">Promotor</span>
-            <div className="ml-auto flex items-center gap-3">
-              <ExportButton
-                inicios={data.inicios}
-                reinicios={data.reinicios}
-                iniciosTiers={stats.iniciosTiers}
-                reiniciosTiers={stats.reiniciosTiers}
-                stats={{
-                  iniciosCount: stats.iniciosCount,
-                  reiniciosCount: stats.reiniciosCount,
-                  iniciosCommission: stats.iniciosCommission,
-                  reiniciosCommission: stats.reiniciosCommission,
-                  totalCommission: stats.totalCommission,
-                  iniciosTierName: stats.iniciosTier.name,
-                  reiniciosTierName: stats.reiniciosTier.name,
-                }}
-                config={data.config}
-              />
-              <span className="text-xs text-muted-foreground hidden sm:block">{user.email}</span>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <ExportButton 
+            inicios={data.inicios}
+            reinicios={data.reinicios}
+            iniciosTiers={stats.iniciosTiers}
+            reiniciosTiers={stats.reiniciosTiers}
+            stats={{
+              iniciosCount: stats.iniciosCount,
+              reiniciosCount: stats.reiniciosCount,
+              iniciosCommission: stats.iniciosCommission,
+              reiniciosCommission: stats.reiniciosCommission,
+              totalCommission: stats.totalCommission,
+              iniciosTierName: stats.iniciosTier.name,
+              reiniciosTierName: stats.reiniciosTier.name,
+            }}
+            config={{
+              iniciosMeta: data.config.iniciosMeta,
+              reiniciosMeta: data.config.reiniciosMeta,
+            }}
+          />
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground hidden sm:block">
+              {user?.email}
+            </span>
+            <Button variant="outline" size="sm" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container max-w-6xl py-6 space-y-6">
-        {/* Dashboard */}
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-6 space-y-6">
         <Dashboard
           iniciosCount={stats.iniciosCount}
           reiniciosCount={stats.reiniciosCount}
@@ -103,75 +109,73 @@ const Index = () => {
           reiniciosTierName={stats.reiniciosTier.name}
         />
 
-        {/* Tabs */}
-        <Tabs defaultValue="inicios" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-12 p-1 bg-muted/50">
-            <TabsTrigger 
-              value="inicios" 
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full font-medium"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Inícios
+        <Tabs defaultValue="inicios" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="inicios" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Inícios</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="reinicios"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full font-medium"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Reinícios
+            <TabsTrigger value="reinicios" className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              <span className="hidden sm:inline">Reinícios</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="config"
-              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full font-medium"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Configuração
+            <TabsTrigger value="projecao" className="flex items-center gap-2">
+              <Calculator className="h-4 w-4" />
+              <span className="hidden sm:inline">Projeção</span>
+            </TabsTrigger>
+            <TabsTrigger value="config" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Configuração</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Inícios Tab */}
-          <TabsContent value="inicios" className="space-y-6 animate-slide-up">
-            <OrderForm onSubmit={addInicio} type="inicio" />
+          <TabsContent value="inicios" className="space-y-6">
             <div className="grid lg:grid-cols-2 gap-6">
-              <OrderList
-                orders={data.inicios}
-                onRemove={removeInicio}
-                type="inicio"
-              />
-              <CommissionSummary
-                count={stats.iniciosCount}
+              <OrderForm onSubmit={addInicio} type="inicio" />
+              <CommissionSummary 
+                count={data.inicios.length}
                 tier={stats.iniciosTier}
-                commission={stats.iniciosCommission}
                 tiers={stats.iniciosTiers}
+                commission={stats.iniciosCommission}
                 type="inicio"
                 cycleMeta={data.config.iniciosMeta}
               />
             </div>
+            <OrderList orders={data.inicios} onRemove={removeInicio} type="inicio" />
           </TabsContent>
 
-          {/* Reinícios Tab */}
-          <TabsContent value="reinicios" className="space-y-6 animate-slide-up">
-            <OrderForm onSubmit={addReinicio} type="reinicio" />
+          <TabsContent value="reinicios" className="space-y-6">
             <div className="grid lg:grid-cols-2 gap-6">
-              <OrderList
-                orders={data.reinicios}
-                onRemove={removeReinicio}
-                type="reinicio"
-              />
-              <CommissionSummary
-                count={stats.reiniciosCount}
+              <OrderForm onSubmit={addReinicio} type="reinicio" />
+              <CommissionSummary 
+                count={data.reinicios.length}
                 tier={stats.reiniciosTier}
-                commission={stats.reiniciosCommission}
                 tiers={stats.reiniciosTiers}
+                commission={stats.reiniciosCommission}
                 type="reinicio"
                 cycleMeta={data.config.reiniciosMeta}
               />
             </div>
+            <OrderList orders={data.reinicios} onRemove={removeReinicio} type="reinicio" />
           </TabsContent>
 
-          {/* Config Tab */}
-          <TabsContent value="config" className="animate-slide-up">
-            <ConfigPanel
+          <TabsContent value="projecao" className="space-y-6">
+            <FinancialProjection
+              currentInicios={data.inicios.length}
+              currentReinicios={data.reinicios.length}
+              inicioTierValue={stats.iniciosTier.value}
+              reinicioTierValue={stats.reiniciosTier.value}
+              iniciosMeta={data.config.iniciosMeta}
+              reiniciosMeta={data.config.reiniciosMeta}
+              nextInicioTierValue={nextInicioTierValue}
+              nextReinicioTierValue={nextReinicioTierValue}
+              sonhoGrandeInicioValue={sonhoGrandeInicioValue}
+              sonhoGrandeReinicioValue={sonhoGrandeReinicioValue}
+            />
+          </TabsContent>
+
+          <TabsContent value="config">
+            <ConfigPanel 
               config={data.config}
               onUpdateConfig={updateConfig}
               onResetCycle={resetCycle}
@@ -180,7 +184,7 @@ const Index = () => {
             />
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
     </div>
   );
 };
