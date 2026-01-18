@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Target, TrendingUp, DollarSign, Rocket, Trophy, Star, ArrowRight, Sparkles } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, Rocket, Trophy, Star, ArrowRight, Sparkles, Percent, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Slider } from '@/components/ui/slider';
 
 interface FinancialProjectionProps {
   currentInicios: number;
@@ -31,52 +32,85 @@ export const FinancialProjection = ({
   sonhoGrandeReinicioValue,
 }: FinancialProjectionProps) => {
   // Editable fields
-  const [metaFinanceira, setMetaFinanceira] = useState(3000);
-  const [valorPorInicio, setValorPorInicio] = useState(inicioTierValue);
-  const [valorPorReinicio, setValorPorReinicio] = useState(reinicioTierValue);
+  const [metaFinanceira, setMetaFinanceira] = useState(2000);
+  const [valorPorInicio, setValorPorInicio] = useState(45);
+  const [valorPorReinicio, setValorPorReinicio] = useState(20);
+  const [percentualInicio, setPercentualInicio] = useState(65);
+  const [sonhoGrande, setSonhoGrande] = useState(5000);
+
+  // Derived percentage
+  const percentualReinicio = 100 - percentualInicio;
+  const percentuaisValidos = percentualInicio >= 0 && percentualInicio <= 100;
 
   // Update values when tier values change
   useEffect(() => {
-    setValorPorInicio(inicioTierValue);
-    setValorPorReinicio(reinicioTierValue);
+    if (inicioTierValue > 0) setValorPorInicio(inicioTierValue);
+    if (reinicioTierValue > 0) setValorPorReinicio(reinicioTierValue);
   }, [inicioTierValue, reinicioTierValue]);
 
   // Calculations
   const calculations = useMemo(() => {
+    // Valores projetados via percentual
+    const valorViaInicio = metaFinanceira * (percentualInicio / 100);
+    const valorViaReinicio = metaFinanceira * (percentualReinicio / 100);
+    
+    // Quantidade necessária para atingir meta com estratégia mesclada
+    const iniciosNecessarios = valorPorInicio > 0 ? Math.ceil(valorViaInicio / valorPorInicio) : 0;
+    const reiniciosNecessarios = valorPorReinicio > 0 ? Math.ceil(valorViaReinicio / valorPorReinicio) : 0;
+    
+    // Total projetado real (baseado nas quantidades arredondadas)
+    const totalProjetado = (iniciosNecessarios * valorPorInicio) + (reiniciosNecessarios * valorPorReinicio);
+    
+    // Ganho atual
     const ganhoAtualInicios = currentInicios * valorPorInicio;
     const ganhoAtualReinicios = currentReinicios * valorPorReinicio;
     const ganhoAtual = ganhoAtualInicios + ganhoAtualReinicios;
     
-    // Calculate remaining to reach goal
+    // Progresso até meta
     const faltaParaMeta = Math.max(0, metaFinanceira - ganhoAtual);
-    
-    // Calculate needed actions to reach goal
-    const iniciosNecessarios = valorPorInicio > 0 ? Math.ceil(faltaParaMeta / valorPorInicio) : 0;
-    const reiniciosNecessarios = valorPorReinicio > 0 ? Math.ceil(faltaParaMeta / valorPorReinicio) : 0;
-    
-    // Progress percentage
     const progressoPercentual = metaFinanceira > 0 ? Math.min(100, (ganhoAtual / metaFinanceira) * 100) : 0;
     
-    // Projected earnings at Sonho Grande
-    const ganhoProjetadoSonhoGrande = (iniciosMeta * sonhoGrandeInicioValue) + (reiniciosMeta * sonhoGrandeReinicioValue);
+    // Inícios e reinícios restantes considerando atual
+    const iniciosFaltando = Math.max(0, iniciosNecessarios - currentInicios);
+    const reiniciosFaltando = Math.max(0, reiniciosNecessarios - currentReinicios);
     
-    // Next tier projected gains
-    const ganhoProximoNivel = (currentInicios * nextInicioTierValue) + (currentReinicios * nextReinicioTierValue);
-    
-    // Meta achieved flags
+    // Meta flags
     const metaAtingida = ganhoAtual >= metaFinanceira;
+    const ultrapassouMeta = ganhoAtual > metaFinanceira;
+    
+    // Sonho Grande calculations
+    const valorViaSonhoGrandeInicio = sonhoGrande * (percentualInicio / 100);
+    const valorViaSonhoGrandeReinicio = sonhoGrande * (percentualReinicio / 100);
+    const iniciosSonhoGrande = valorPorInicio > 0 ? Math.ceil(valorViaSonhoGrandeInicio / valorPorInicio) : 0;
+    const reiniciosSonhoGrande = valorPorReinicio > 0 ? Math.ceil(valorViaSonhoGrandeReinicio / valorPorReinicio) : 0;
+    const totalSonhoGrande = (iniciosSonhoGrande * valorPorInicio) + (reiniciosSonhoGrande * valorPorReinicio);
+    const diferencaSonhoGrande = totalSonhoGrande - totalProjetado;
+    
+    // Projeção próximo nível
+    const ganhoProximoNivel = (currentInicios * nextInicioTierValue) + (currentReinicios * nextReinicioTierValue);
+    const ganhoProjetadoSonhoGrandeTier = (iniciosMeta * sonhoGrandeInicioValue) + (reiniciosMeta * sonhoGrandeReinicioValue);
     
     return {
+      valorViaInicio,
+      valorViaReinicio,
+      iniciosNecessarios,
+      reiniciosNecessarios,
+      totalProjetado,
       ganhoAtualInicios,
       ganhoAtualReinicios,
       ganhoAtual,
       faltaParaMeta,
-      iniciosNecessarios,
-      reiniciosNecessarios,
       progressoPercentual,
-      ganhoProjetadoSonhoGrande,
-      ganhoProximoNivel,
+      iniciosFaltando,
+      reiniciosFaltando,
       metaAtingida,
+      ultrapassouMeta,
+      iniciosSonhoGrande,
+      reiniciosSonhoGrande,
+      totalSonhoGrande,
+      diferencaSonhoGrande,
+      ganhoProximoNivel,
+      ganhoProjetadoSonhoGrandeTier,
     };
   }, [
     currentInicios, 
@@ -84,6 +118,9 @@ export const FinancialProjection = ({
     valorPorInicio, 
     valorPorReinicio, 
     metaFinanceira,
+    percentualInicio,
+    percentualReinicio,
+    sonhoGrande,
     iniciosMeta,
     reiniciosMeta,
     nextInicioTierValue,
@@ -96,7 +133,14 @@ export const FinancialProjection = ({
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   const getMotivationalMessage = () => {
-    const { progressoPercentual, faltaParaMeta, iniciosNecessarios, metaAtingida, ganhoProjetadoSonhoGrande } = calculations;
+    const { progressoPercentual, faltaParaMeta, iniciosFaltando, reiniciosFaltando, metaAtingida, ultrapassouMeta, totalSonhoGrande } = calculations;
+    
+    if (ultrapassouMeta) {
+      return {
+        message: "🏆 Incrível! Você ULTRAPASSOU sua meta financeira!",
+        type: "success"
+      };
+    }
     
     if (metaAtingida) {
       return {
@@ -107,20 +151,20 @@ export const FinancialProjection = ({
     
     if (progressoPercentual >= 80) {
       return {
-        message: `🔥 Você está a ${formatCurrency(faltaParaMeta)} de alcançar sua meta! Só mais ${iniciosNecessarios} inícios!`,
+        message: `🔥 Você está a ${formatCurrency(faltaParaMeta)} de alcançar sua meta! Faltam ${iniciosFaltando} inícios e ${reiniciosFaltando} reinícios!`,
         type: "hot"
       };
     }
     
     if (progressoPercentual >= 50) {
       return {
-        message: `💪 Metade do caminho! Faltam ${formatCurrency(faltaParaMeta)} para sua meta.`,
+        message: `💪 Metade do caminho! Com ${percentualInicio}% Início e ${percentualReinicio}% Reinício, você alcança ${formatCurrency(calculations.totalProjetado)}`,
         type: "progress"
       };
     }
     
     return {
-      message: `🚀 Se continuar nesse ritmo, seu Sonho Grande renderá ${formatCurrency(ganhoProjetadoSonhoGrande)}!`,
+      message: `🚀 Estratégia equilibrada: ${percentualInicio}% Início / ${percentualReinicio}% Reinício. Sonho Grande renderá ${formatCurrency(totalSonhoGrande)}!`,
       type: "start"
     };
   };
@@ -136,7 +180,7 @@ export const FinancialProjection = ({
         </div>
         <div>
           <h2 className="text-xl font-bold text-foreground">Projeção Financeira</h2>
-          <p className="text-sm text-muted-foreground">Mapa de metas e ganhos</p>
+          <p className="text-sm text-muted-foreground">Estratégia com percentual Início / Reinício</p>
         </div>
       </div>
 
@@ -150,13 +194,62 @@ export const FinancialProjection = ({
         <p className="text-center font-medium text-foreground">{motivational.message}</p>
       </div>
 
+      {/* Percentage Control */}
+      <Card className="card-premium border-2 border-primary/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Percent className="h-4 w-4 text-primary" />
+            Distribuição Percentual da Estratégia
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <span>Início: <strong>{percentualInicio}%</strong></span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500" />
+              <span>Reinício: <strong>{percentualReinicio}%</strong></span>
+            </div>
+          </div>
+          
+          <Slider
+            value={[percentualInicio]}
+            onValueChange={(value) => setPercentualInicio(value[0])}
+            min={0}
+            max={100}
+            step={5}
+            className="w-full"
+          />
+          
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>100% Reinício</span>
+            <span>Equilibrado</span>
+            <span>100% Início</span>
+          </div>
+          
+          {percentuaisValidos ? (
+            <div className="flex items-center gap-2 text-green-500 text-sm">
+              <CheckCircle className="h-4 w-4" />
+              <span>Soma dos percentuais = 100% ✓</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-destructive text-sm">
+              <AlertTriangle className="h-4 w-4" />
+              <span>Erro: percentuais devem somar 100%</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Main Controls Grid */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="card-premium">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Target className="h-4 w-4 text-primary" />
-              Meta Financeira Final
+              Meta Financeira
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -191,7 +284,7 @@ export const FinancialProjection = ({
                 min={0}
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Atualiza conforme faixa atual</p>
+            <p className="text-xs text-muted-foreground mt-1">Padrão: R$ 45,00</p>
           </CardContent>
         </Card>
 
@@ -213,14 +306,66 @@ export const FinancialProjection = ({
                 min={0}
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Atualiza conforme faixa atual</p>
+            <p className="text-xs text-muted-foreground mt-1">Padrão: R$ 20,00</p>
+          </CardContent>
+        </Card>
+
+        <Card className="card-premium bg-gradient-to-br from-gold/10 to-gold/5 border-gold/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-gold" />
+              Sonho Grande
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+              <Input
+                type="number"
+                value={sonhoGrande}
+                onChange={(e) => setSonhoGrande(Number(e.target.value))}
+                className="pl-10 text-lg font-semibold border-gold/30"
+                min={0}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Meta máxima desejada</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Calculated Values Panel */}
+      <Card className="card-premium">
+        <CardHeader>
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Cálculos Automáticos (Meta: {formatCurrency(metaFinanceira)})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+              <p className="text-xs text-muted-foreground mb-1">Valor via Início ({percentualInicio}%)</p>
+              <p className="text-xl font-bold text-green-500">{formatCurrency(calculations.valorViaInicio)}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <p className="text-xs text-muted-foreground mb-1">Valor via Reinício ({percentualReinicio}%)</p>
+              <p className="text-xl font-bold text-blue-500">{formatCurrency(calculations.valorViaReinicio)}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+              <p className="text-xs text-muted-foreground mb-1">Inícios Necessários</p>
+              <p className="text-xl font-bold text-green-500">{calculations.iniciosNecessarios}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <p className="text-xs text-muted-foreground mb-1">Reinícios Necessários</p>
+              <p className="text-xl font-bold text-blue-500">{calculations.reiniciosNecessarios}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Progress Dashboard */}
       <Card className="card-premium overflow-hidden">
-        <div className={`h-1 ${calculations.metaAtingida ? 'bg-green-500' : 'gradient-primary'}`} />
+        <div className={`h-2 ${calculations.ultrapassouMeta ? 'bg-gradient-to-r from-green-500 to-gold' : calculations.metaAtingida ? 'bg-green-500' : 'gradient-primary'}`} />
         <CardContent className="pt-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -234,9 +379,15 @@ export const FinancialProjection = ({
               className={`h-4 ${calculations.metaAtingida ? '[&>div]:bg-green-500' : ''}`}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{formatCurrency(calculations.ganhoAtual)}</span>
-              <span>{formatCurrency(metaFinanceira)}</span>
+              <span>Atual: {formatCurrency(calculations.ganhoAtual)}</span>
+              <span>Meta: {formatCurrency(metaFinanceira)}</span>
             </div>
+            
+            {calculations.ultrapassouMeta && (
+              <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/30 text-center">
+                <p className="text-green-500 font-medium">🎯 Meta ultrapassada em {formatCurrency(calculations.ganhoAtual - metaFinanceira)}!</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -272,21 +423,21 @@ export const FinancialProjection = ({
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
               <Rocket className="h-4 w-4 text-primary" />
-              <span className="text-xs text-muted-foreground">Próximo Nível</span>
+              <span className="text-xs text-muted-foreground">Total Projetado</span>
             </div>
-            <p className="text-xl font-bold text-foreground">{formatCurrency(calculations.ganhoProximoNivel)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ganho projetado</p>
+            <p className="text-xl font-bold text-primary">{formatCurrency(calculations.totalProjetado)}</p>
+            <p className="text-xs text-muted-foreground mt-1">Com estratégia atual</p>
           </CardContent>
         </Card>
 
-        <Card className="card-premium">
+        <Card className="card-premium bg-gradient-to-br from-gold/10 to-transparent">
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
               <Trophy className="h-4 w-4 text-gold" />
               <span className="text-xs text-muted-foreground">Sonho Grande</span>
             </div>
-            <p className="text-xl font-bold text-gradient-gold">{formatCurrency(calculations.ganhoProjetadoSonhoGrande)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Meta máxima</p>
+            <p className="text-xl font-bold text-gold">{formatCurrency(calculations.totalSonhoGrande)}</p>
+            <p className="text-xs text-muted-foreground mt-1">+{formatCurrency(calculations.diferencaSonhoGrande)} vs meta</p>
           </CardContent>
         </Card>
       </div>
@@ -297,10 +448,10 @@ export const FinancialProjection = ({
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Inícios Necessários</p>
-                <p className="text-3xl font-bold text-foreground">{calculations.iniciosNecessarios}</p>
+                <p className="text-sm text-muted-foreground mb-1">Inícios Restantes</p>
+                <p className="text-3xl font-bold text-foreground">{calculations.iniciosFaltando}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  para alcançar {formatCurrency(metaFinanceira)}
+                  de {calculations.iniciosNecessarios} necessários ({percentualInicio}%)
                 </p>
               </div>
               <div className="p-3 rounded-full bg-green-500/10">
@@ -314,10 +465,10 @@ export const FinancialProjection = ({
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Reinícios Necessários</p>
-                <p className="text-3xl font-bold text-foreground">{calculations.reiniciosNecessarios}</p>
+                <p className="text-sm text-muted-foreground mb-1">Reinícios Restantes</p>
+                <p className="text-3xl font-bold text-foreground">{calculations.reiniciosFaltando}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  para alcançar {formatCurrency(metaFinanceira)}
+                  de {calculations.reiniciosNecessarios} necessários ({percentualReinicio}%)
                 </p>
               </div>
               <div className="p-3 rounded-full bg-blue-500/10">
@@ -327,6 +478,37 @@ export const FinancialProjection = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* Sonho Grande Projection */}
+      <Card className="card-premium border-2 border-gold/30 bg-gradient-to-br from-gold/5 to-transparent">
+        <CardHeader>
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-gold" />
+            Projeção Sonho Grande ({formatCurrency(sonhoGrande)})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-gold/10 border border-gold/20 text-center">
+              <p className="text-xs text-muted-foreground mb-1">Inícios para Sonho Grande</p>
+              <p className="text-2xl font-bold text-gold">{calculations.iniciosSonhoGrande}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-gold/10 border border-gold/20 text-center">
+              <p className="text-xs text-muted-foreground mb-1">Reinícios para Sonho Grande</p>
+              <p className="text-2xl font-bold text-gold">{calculations.reiniciosSonhoGrande}</p>
+            </div>
+            <div className="p-4 rounded-lg bg-gold/10 border border-gold/20 text-center">
+              <p className="text-xs text-muted-foreground mb-1">Total Projetado</p>
+              <p className="text-2xl font-bold text-gold">{formatCurrency(calculations.totalSonhoGrande)}</p>
+            </div>
+          </div>
+          <div className="mt-4 p-3 rounded-lg bg-gold/20 text-center">
+            <p className="text-sm font-medium text-gold">
+              Diferença Meta → Sonho Grande: +{formatCurrency(calculations.diferencaSonhoGrande)}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tier Projection Table */}
       <Card className="card-premium">
@@ -379,7 +561,7 @@ export const FinancialProjection = ({
                   <td className="text-right text-gold font-medium">R$ 45,00</td>
                   <td className="text-right text-gold font-medium">R$ 20,00</td>
                   <td className="text-right text-gold font-bold">
-                    {formatCurrency(calculations.ganhoProjetadoSonhoGrande)}
+                    {formatCurrency(calculations.ganhoProjetadoSonhoGrandeTier)}
                   </td>
                 </tr>
               </tbody>
@@ -388,20 +570,25 @@ export const FinancialProjection = ({
         </CardContent>
       </Card>
 
-      {/* Summary Message */}
+      {/* Strategy Summary Message */}
       <Card className="card-premium bg-gradient-to-r from-primary/5 to-gold/5">
         <CardContent className="pt-6">
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-3">
             <p className="text-lg font-medium text-foreground">
-              {calculations.metaAtingida ? (
-                <>🏆 Você já alcançou sua meta de {formatCurrency(metaFinanceira)}!</>
-              ) : (
-                <>Faltam apenas <span className="text-primary font-bold">{calculations.iniciosNecessarios} inícios</span> para chegar aos {formatCurrency(metaFinanceira)}</>
-              )}
+              Com <span className="text-green-500 font-bold">{percentualInicio}% Início</span> e{' '}
+              <span className="text-blue-500 font-bold">{percentualReinicio}% Reinício</span>, você alcança{' '}
+              <span className="text-primary font-bold">{formatCurrency(calculations.totalProjetado)}</span>
             </p>
             <p className="text-sm text-muted-foreground">
-              Ganho atual: {formatCurrency(calculations.ganhoAtual)} | 
-              Meta Sonho Grande: {formatCurrency(calculations.ganhoProjetadoSonhoGrande)}
+              {calculations.metaAtingida ? (
+                <>🏆 Meta atingida! Continue para alcançar o Sonho Grande de {formatCurrency(sonhoGrande)}</>
+              ) : (
+                <>Faltam <span className="text-green-500 font-medium">{calculations.iniciosFaltando} inícios</span> e{' '}
+                <span className="text-blue-500 font-medium">{calculations.reiniciosFaltando} reinícios</span> para bater a meta</>
+              )}
+            </p>
+            <p className="text-xs text-muted-foreground italic">
+              ⚡ Estratégia equilibrada e sustentável ativada
             </p>
           </div>
         </CardContent>
