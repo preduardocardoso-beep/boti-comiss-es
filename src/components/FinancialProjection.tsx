@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Target, TrendingUp, DollarSign, Rocket, Trophy, Star, ArrowRight, Sparkles, Percent, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { Target, TrendingUp, DollarSign, Rocket, Trophy, Star, ArrowRight, Sparkles, Percent, AlertTriangle, CheckCircle, PartyPopper } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
+import confetti from 'canvas-confetti';
 
 interface FinancialProjectionProps {
   currentInicios: number;
@@ -37,6 +38,7 @@ export const FinancialProjection = ({
   const [valorPorReinicio, setValorPorReinicio] = useState(20);
   const [percentualInicio, setPercentualInicio] = useState(65);
   const [sonhoGrande, setSonhoGrande] = useState(5000);
+  const [hasShownCelebration, setHasShownCelebration] = useState(false);
 
   // Derived percentage
   const percentualReinicio = 100 - percentualInicio;
@@ -47,6 +49,38 @@ export const FinancialProjection = ({
     if (inicioTierValue > 0) setValorPorInicio(inicioTierValue);
     if (reinicioTierValue > 0) setValorPorReinicio(reinicioTierValue);
   }, [inicioTierValue, reinicioTierValue]);
+
+  // Celebration confetti effect
+  const triggerCelebration = useCallback(() => {
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        colors: ['#006B3F', '#FFD700', '#00A86B', '#FFFFFF'],
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        colors: ['#006B3F', '#FFD700', '#00A86B', '#FFFFFF'],
+      });
+    }, 250);
+  }, []);
 
   // Calculations
   const calculations = useMemo(() => {
@@ -129,6 +163,21 @@ export const FinancialProjection = ({
     sonhoGrandeReinicioValue,
   ]);
 
+  // Trigger celebration when goal is achieved
+  useEffect(() => {
+    if (calculations.metaAtingida && !hasShownCelebration) {
+      triggerCelebration();
+      setHasShownCelebration(true);
+    }
+  }, [calculations.metaAtingida, hasShownCelebration, triggerCelebration]);
+
+  // Reset celebration flag when meta changes significantly
+  useEffect(() => {
+    if (!calculations.metaAtingida) {
+      setHasShownCelebration(false);
+    }
+  }, [calculations.metaAtingida]);
+
   const formatCurrency = (value: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
@@ -184,15 +233,41 @@ export const FinancialProjection = ({
         </div>
       </div>
 
-      {/* Motivational Banner */}
-      <div className={`p-4 rounded-xl ${
-        motivational.type === 'success' ? 'bg-green-500/10 border border-green-500/30' :
-        motivational.type === 'hot' ? 'bg-orange-500/10 border border-orange-500/30' :
-        motivational.type === 'progress' ? 'bg-blue-500/10 border border-blue-500/30' :
-        'bg-primary/10 border border-primary/30'
-      }`}>
-        <p className="text-center font-medium text-foreground">{motivational.message}</p>
-      </div>
+      {/* Celebration Banner when goal achieved */}
+      {calculations.metaAtingida && (
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500 via-primary to-green-600 p-6 animate-scale-in">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgZmlsbD0iI2ZmZmZmZjIwIiBjeD0iMjAiIGN5PSIyMCIgcj0iMiIvPjwvZz48L3N2Zz4=')] opacity-30" />
+          <div className="relative flex flex-col items-center gap-3 text-white">
+            <div className="flex items-center gap-2 animate-fade-in">
+              <PartyPopper className="h-8 w-8 animate-bounce" />
+              <Trophy className="h-10 w-10 text-yellow-300 drop-shadow-lg animate-pulse" />
+              <PartyPopper className="h-8 w-8 animate-bounce" style={{ animationDelay: '0.2s' }} />
+            </div>
+            <h3 className="text-2xl font-bold text-center drop-shadow-md">
+              {calculations.ultrapassouMeta ? '🏆 META ULTRAPASSADA!' : '🎉 META ATINGIDA!'}
+            </h3>
+            <p className="text-lg font-medium text-white/90 text-center">
+              Você alcançou {formatCurrency(calculations.ganhoAtual)} de {formatCurrency(metaFinanceira)}!
+            </p>
+            {calculations.ultrapassouMeta && (
+              <div className="mt-2 px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm animate-fade-in">
+                <span className="font-semibold">+{formatCurrency(calculations.ganhoAtual - metaFinanceira)} acima da meta! 🚀</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Motivational Banner (only when goal not achieved) */}
+      {!calculations.metaAtingida && (
+        <div className={`p-4 rounded-xl transition-all duration-300 ${
+          motivational.type === 'hot' ? 'bg-orange-500/10 border border-orange-500/30' :
+          motivational.type === 'progress' ? 'bg-blue-500/10 border border-blue-500/30' :
+          'bg-primary/10 border border-primary/30'
+        }`}>
+          <p className="text-center font-medium text-foreground">{motivational.message}</p>
+        </div>
+      )}
 
       {/* Percentage Control */}
       <Card className="card-premium border-2 border-primary/20">
