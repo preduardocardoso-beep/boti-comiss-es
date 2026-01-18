@@ -310,27 +310,6 @@ export const FinancialProjection = ({
           </CardContent>
         </Card>
 
-        <Card className="card-premium bg-gradient-to-br from-gold/10 to-gold/5 border-gold/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-gold" />
-              Sonho Grande
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-              <Input
-                type="number"
-                value={sonhoGrande}
-                onChange={(e) => setSonhoGrande(Number(e.target.value))}
-                className="pl-10 text-lg font-semibold border-gold/30"
-                min={0}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Meta máxima desejada</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Calculated Values Panel */}
@@ -430,16 +409,6 @@ export const FinancialProjection = ({
           </CardContent>
         </Card>
 
-        <Card className="card-premium bg-gradient-to-br from-gold/10 to-transparent">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Trophy className="h-4 w-4 text-gold" />
-              <span className="text-xs text-muted-foreground">Sonho Grande</span>
-            </div>
-            <p className="text-xl font-bold text-gold">{formatCurrency(calculations.totalSonhoGrande)}</p>
-            <p className="text-xs text-muted-foreground mt-1">+{formatCurrency(calculations.diferencaSonhoGrande)} vs meta</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Actions Needed Panel */}
@@ -479,36 +448,6 @@ export const FinancialProjection = ({
         </Card>
       </div>
 
-      {/* Sonho Grande Projection */}
-      <Card className="card-premium border-2 border-gold/30 bg-gradient-to-br from-gold/5 to-transparent">
-        <CardHeader>
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-gold" />
-            Projeção Sonho Grande ({formatCurrency(sonhoGrande)})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-lg bg-gold/10 border border-gold/20 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Inícios para Sonho Grande</p>
-              <p className="text-2xl font-bold text-gold">{calculations.iniciosSonhoGrande}</p>
-            </div>
-            <div className="p-4 rounded-lg bg-gold/10 border border-gold/20 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Reinícios para Sonho Grande</p>
-              <p className="text-2xl font-bold text-gold">{calculations.reiniciosSonhoGrande}</p>
-            </div>
-            <div className="p-4 rounded-lg bg-gold/10 border border-gold/20 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Total Projetado</p>
-              <p className="text-2xl font-bold text-gold">{formatCurrency(calculations.totalSonhoGrande)}</p>
-            </div>
-          </div>
-          <div className="mt-4 p-3 rounded-lg bg-gold/20 text-center">
-            <p className="text-sm font-medium text-gold">
-              Diferença Meta → Sonho Grande: +{formatCurrency(calculations.diferencaSonhoGrande)}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Tier Projection Table */}
       <Card className="card-premium">
@@ -552,16 +491,6 @@ export const FinancialProjection = ({
                   <td className="text-right text-foreground">R$ 15,00</td>
                   <td className="text-right text-foreground font-medium">
                     {formatCurrency((iniciosMeta * 35) + (reiniciosMeta * 15))}
-                  </td>
-                </tr>
-                <tr className="bg-gold/10">
-                  <td className="py-3 font-bold text-gold flex items-center gap-2">
-                    <Trophy className="h-4 w-4" /> Sonho Grande
-                  </td>
-                  <td className="text-right text-gold font-medium">R$ 45,00</td>
-                  <td className="text-right text-gold font-medium">R$ 20,00</td>
-                  <td className="text-right text-gold font-bold">
-                    {formatCurrency(calculations.ganhoProjetadoSonhoGrandeTier)}
                   </td>
                 </tr>
               </tbody>
