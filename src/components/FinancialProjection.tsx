@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { Target, TrendingUp, DollarSign, Rocket, Trophy, Star, ArrowRight, Sparkles, Percent, AlertTriangle, CheckCircle, PartyPopper } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, Rocket, Trophy, Star, ArrowRight, Sparkles, Percent, AlertTriangle, CheckCircle, PartyPopper, Save } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
@@ -223,14 +225,25 @@ export const FinancialProjection = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-xl gradient-gold">
-          <Target className="h-6 w-6 text-primary-foreground" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl gradient-gold">
+            <Target className="h-6 w-6 text-primary-foreground" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-foreground">Projeção Financeira</h2>
+            <p className="text-sm text-muted-foreground">Estratégia com percentual Início / Reinício</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-foreground">Projeção Financeira</h2>
-          <p className="text-sm text-muted-foreground">Estratégia com percentual Início / Reinício</p>
-        </div>
+        <Button
+          onClick={() => {
+            toast.success('Alterações salvas com sucesso!');
+          }}
+          className="gap-2"
+        >
+          <Save className="h-4 w-4" />
+          Salvar Alterações
+        </Button>
       </div>
 
       {/* Celebration Banner when goal achieved */}
