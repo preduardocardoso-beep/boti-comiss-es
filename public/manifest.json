@@ -1,0 +1,29 @@
+{
+  "name": "Painel Promotores - Grupo Boticário",
+  "short_name": "Promotores GB",
+  "description": "Controle suas comissões de Inícios e Reinícios do Grupo Boticário",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#006B3F",
+  "theme_color": "#006B3F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
