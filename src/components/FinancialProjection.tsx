@@ -34,12 +34,18 @@ export const FinancialProjection = ({
   sonhoGrandeInicioValue,
   sonhoGrandeReinicioValue,
 }: FinancialProjectionProps) => {
-  // Editable fields
-  const [metaFinanceira, setMetaFinanceira] = useState(2000);
-  const [valorPorInicio, setValorPorInicio] = useState(45);
-  const [valorPorReinicio, setValorPorReinicio] = useState(20);
-  const [percentualInicio, setPercentualInicio] = useState(65);
-  const [sonhoGrande, setSonhoGrande] = useState(5000);
+  // Load saved values from localStorage
+  const loadSavedValue = (key: string, defaultValue: number) => {
+    const saved = localStorage.getItem(key);
+    return saved ? Number(saved) : defaultValue;
+  };
+
+  // Editable fields with persistence
+  const [metaFinanceira, setMetaFinanceira] = useState(() => loadSavedValue('projecao_metaFinanceira', 2000));
+  const [valorPorInicio, setValorPorInicio] = useState(() => loadSavedValue('projecao_valorPorInicio', 45));
+  const [valorPorReinicio, setValorPorReinicio] = useState(() => loadSavedValue('projecao_valorPorReinicio', 20));
+  const [percentualInicio, setPercentualInicio] = useState(() => loadSavedValue('projecao_percentualInicio', 65));
+  const [sonhoGrande, setSonhoGrande] = useState(() => loadSavedValue('projecao_sonhoGrande', 5000));
   const [hasShownCelebration, setHasShownCelebration] = useState(false);
 
   // Derived percentage
@@ -237,6 +243,11 @@ export const FinancialProjection = ({
         </div>
         <Button
           onClick={() => {
+            localStorage.setItem('projecao_metaFinanceira', metaFinanceira.toString());
+            localStorage.setItem('projecao_valorPorInicio', valorPorInicio.toString());
+            localStorage.setItem('projecao_valorPorReinicio', valorPorReinicio.toString());
+            localStorage.setItem('projecao_percentualInicio', percentualInicio.toString());
+            localStorage.setItem('projecao_sonhoGrande', sonhoGrande.toString());
             toast.success('Alterações salvas com sucesso!');
           }}
           className="gap-2"
