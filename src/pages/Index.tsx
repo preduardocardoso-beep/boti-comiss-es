@@ -10,7 +10,7 @@ import { ExportButton } from '@/components/ExportButton';
 import { FinancialProjection } from '@/components/FinancialProjection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator } from 'lucide-react';
+import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -84,6 +84,10 @@ const Index = () => {
             }}
           />
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => navigate('/ciclos')}>
+              <CalendarDays className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Ciclos</span>
+            </Button>
             <span className="text-sm text-muted-foreground hidden sm:block">
               {user?.email}
             </span>
