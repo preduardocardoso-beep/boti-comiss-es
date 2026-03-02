@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommission } from '@/hooks/useCommission';
+import { useCycleHistory } from '@/hooks/useCycleHistory';
+import { getCurrentCycle } from '@/lib/getCurrentCycle';
 import { Dashboard } from '@/components/Dashboard';
 import { OrderForm } from '@/components/OrderForm';
 import { OrderList } from '@/components/OrderList';
@@ -8,9 +10,10 @@ import { CommissionSummary } from '@/components/CommissionSummary';
 import { ConfigPanel } from '@/components/ConfigPanel';
 import { ExportButton } from '@/components/ExportButton';
 import { FinancialProjection } from '@/components/FinancialProjection';
+import { CycleHistoryPanel } from '@/components/CycleHistoryPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays } from 'lucide-react';
+import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays, History } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
