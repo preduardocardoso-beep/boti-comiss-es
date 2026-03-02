@@ -29,6 +29,8 @@ const Index = () => {
     updateConfig,
     resetCycle
   } = useCommission();
+  const { history, loading: historyLoading, saveCycleSnapshot, deleteHistory } = useCycleHistory();
+  const currentCycle = getCurrentCycle();
 
   // Redirect to auth if not logged in
   if (!authLoading && !user) {
