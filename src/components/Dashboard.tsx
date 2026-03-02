@@ -1,5 +1,6 @@
-import { TrendingUp, Users, RefreshCw, Target, Award, Sparkles } from 'lucide-react';
+import { TrendingUp, Users, RefreshCw, Target, Award, Sparkles, CalendarDays } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { getCurrentCycle } from '@/lib/getCurrentCycle';
 
 interface DashboardProps {
   iniciosCount: number;
@@ -93,17 +94,30 @@ export const Dashboard = ({
   const formatCurrency = (value: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
+  const currentCycle = getCurrentCycle();
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-xl gradient-primary">
-          <Sparkles className="h-6 w-6 text-primary-foreground" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl gradient-primary">
+            <Sparkles className="h-6 w-6 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Painel Promotores</h1>
+            <p className="text-sm text-muted-foreground">Controle de Resultados</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Painel Promotores</h1>
-          <p className="text-sm text-muted-foreground">Controle de Resultados</p>
-        </div>
+        {currentCycle && (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            <div className="text-right">
+              <p className="text-sm font-bold text-primary">{currentCycle.ciclo}</p>
+              <p className="text-xs text-muted-foreground">{currentCycle.inicio} - {currentCycle.fim}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stats Grid */}

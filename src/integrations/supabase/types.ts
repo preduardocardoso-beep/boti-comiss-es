@@ -59,6 +59,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cycle_history: {
+        Row: {
+          created_at: string
+          cycle_name: string
+          id: string
+          inicios_commission: number
+          inicios_count: number
+          inicios_data: Json | null
+          inicios_tier_name: string | null
+          reinicios_commission: number
+          reinicios_count: number
+          reinicios_data: Json | null
+          reinicios_tier_name: string | null
+          total_commission: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_name: string
+          id?: string
+          inicios_commission?: number
+          inicios_count?: number
+          inicios_data?: Json | null
+          inicios_tier_name?: string | null
+          reinicios_commission?: number
+          reinicios_count?: number
+          reinicios_data?: Json | null
+          reinicios_tier_name?: string | null
+          total_commission?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cycle_name?: string
+          id?: string
+          inicios_commission?: number
+          inicios_count?: number
+          inicios_data?: Json | null
+          inicios_tier_name?: string | null
+          reinicios_commission?: number
+          reinicios_count?: number
+          reinicios_data?: Json | null
+          reinicios_tier_name?: string | null
+          total_commission?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           client_name: string

@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommission } from '@/hooks/useCommission';
+import { useCycleHistory } from '@/hooks/useCycleHistory';
+import { getCurrentCycle } from '@/lib/getCurrentCycle';
 import { Dashboard } from '@/components/Dashboard';
 import { OrderForm } from '@/components/OrderForm';
 import { OrderList } from '@/components/OrderList';
@@ -8,9 +10,10 @@ import { CommissionSummary } from '@/components/CommissionSummary';
 import { ConfigPanel } from '@/components/ConfigPanel';
 import { ExportButton } from '@/components/ExportButton';
 import { FinancialProjection } from '@/components/FinancialProjection';
+import { CycleHistoryPanel } from '@/components/CycleHistoryPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays } from 'lucide-react';
+import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays, History } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -26,6 +29,8 @@ const Index = () => {
     updateConfig,
     resetCycle
   } = useCommission();
+  const { history, loading: historyLoading, saveCycleSnapshot, deleteHistory } = useCycleHistory();
+  const currentCycle = getCurrentCycle();
 
   // Redirect to auth if not logged in
   if (!authLoading && !user) {
@@ -33,7 +38,7 @@ const Index = () => {
     return null;
   }
 
-  if (authLoading || dataLoading) {
+  if (authLoading || dataLoading || historyLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -58,6 +63,22 @@ const Index = () => {
   // Sonho Grande values (last tier)
   const sonhoGrandeInicioValue = stats.iniciosTiers[stats.iniciosTiers.length - 1]?.value || 45;
   const sonhoGrandeReinicioValue = stats.reiniciosTiers[stats.reiniciosTiers.length - 1]?.value || 20;
+
+  const handleSaveCycleBeforeReset = async () => {
+    const cycleName = currentCycle?.ciclo || `Ciclo ${new Date().toLocaleDateString('pt-BR')}`;
+    await saveCycleSnapshot({
+      cycleName,
+      iniciosCount: stats.iniciosCount,
+      reiniciosCount: stats.reiniciosCount,
+      iniciosCommission: stats.iniciosCommission,
+      reiniciosCommission: stats.reiniciosCommission,
+      totalCommission: stats.totalCommission,
+      iniciosTierName: stats.iniciosTier.name,
+      reiniciosTierName: stats.reiniciosTier.name,
+      iniciosData: data.inicios,
+      reiniciosData: data.reinicios,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,7 +135,7 @@ const Index = () => {
         />
 
         <Tabs defaultValue="inicios" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="inicios" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Inícios</span>
@@ -126,6 +147,10 @@ const Index = () => {
             <TabsTrigger value="projecao" className="flex items-center gap-2">
               <Calculator className="h-4 w-4" />
               <span className="hidden sm:inline">Projeção</span>
+            </TabsTrigger>
+            <TabsTrigger value="historico" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">Histórico</span>
             </TabsTrigger>
             <TabsTrigger value="config" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -178,11 +203,16 @@ const Index = () => {
             />
           </TabsContent>
 
+          <TabsContent value="historico">
+            <CycleHistoryPanel history={history} onDelete={deleteHistory} />
+          </TabsContent>
+
           <TabsContent value="config">
             <ConfigPanel 
               config={data.config}
               onUpdateConfig={updateConfig}
               onResetCycle={resetCycle}
+              onSaveCycleBeforeReset={handleSaveCycleBeforeReset}
               iniciosTiers={stats.iniciosTiers}
               reiniciosTiers={stats.reiniciosTiers}
             />

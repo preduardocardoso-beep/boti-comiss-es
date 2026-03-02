@@ -20,6 +20,7 @@ interface ConfigPanelProps {
   config: CycleConfig;
   onUpdateConfig: (config: CycleConfig) => void;
   onResetCycle: () => void;
+  onSaveCycleBeforeReset?: () => Promise<void>;
   iniciosTiers: CommissionTier[];
   reiniciosTiers: CommissionTier[];
 }
@@ -28,6 +29,7 @@ export const ConfigPanel = ({
   config,
   onUpdateConfig,
   onResetCycle,
+  onSaveCycleBeforeReset,
   iniciosTiers,
   reiniciosTiers,
 }: ConfigPanelProps) => {
@@ -79,11 +81,14 @@ export const ConfigPanel = ({
     });
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
+    if (onSaveCycleBeforeReset) {
+      await onSaveCycleBeforeReset();
+    }
     onResetCycle();
     toast({
       title: "Ciclo reiniciado!",
-      description: "Todos os registros foram removidos.",
+      description: "Relatório salvo e registros removidos.",
     });
   };
 
