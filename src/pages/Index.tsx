@@ -135,7 +135,7 @@ const Index = () => {
         />
 
         <Tabs defaultValue="inicios" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="inicios" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Inícios</span>
@@ -147,6 +147,10 @@ const Index = () => {
             <TabsTrigger value="projecao" className="flex items-center gap-2">
               <Calculator className="h-4 w-4" />
               <span className="hidden sm:inline">Projeção</span>
+            </TabsTrigger>
+            <TabsTrigger value="historico" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">Histórico</span>
             </TabsTrigger>
             <TabsTrigger value="config" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -199,11 +203,16 @@ const Index = () => {
             />
           </TabsContent>
 
+          <TabsContent value="historico">
+            <CycleHistoryPanel history={history} onDelete={deleteHistory} />
+          </TabsContent>
+
           <TabsContent value="config">
             <ConfigPanel 
               config={data.config}
               onUpdateConfig={updateConfig}
               onResetCycle={resetCycle}
+              onSaveCycleBeforeReset={handleSaveCycleBeforeReset}
               iniciosTiers={stats.iniciosTiers}
               reiniciosTiers={stats.reiniciosTiers}
             />
