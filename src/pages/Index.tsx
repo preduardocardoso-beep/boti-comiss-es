@@ -64,6 +64,22 @@ const Index = () => {
   const sonhoGrandeInicioValue = stats.iniciosTiers[stats.iniciosTiers.length - 1]?.value || 45;
   const sonhoGrandeReinicioValue = stats.reiniciosTiers[stats.reiniciosTiers.length - 1]?.value || 20;
 
+  const handleSaveCycleBeforeReset = async () => {
+    const cycleName = currentCycle?.ciclo || `Ciclo ${new Date().toLocaleDateString('pt-BR')}`;
+    await saveCycleSnapshot({
+      cycleName,
+      iniciosCount: stats.iniciosCount,
+      reiniciosCount: stats.reiniciosCount,
+      iniciosCommission: stats.iniciosCommission,
+      reiniciosCommission: stats.reiniciosCommission,
+      totalCommission: stats.totalCommission,
+      iniciosTierName: stats.iniciosTier.name,
+      reiniciosTierName: stats.reiniciosTier.name,
+      iniciosData: data.inicios,
+      reiniciosData: data.reinicios,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
