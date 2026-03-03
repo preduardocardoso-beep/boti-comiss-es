@@ -98,6 +98,12 @@ export const Dashboard = ({
 
   return (
     <div className="space-y-6">
+      {/* Aviso informativo */}
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/60 border border-border text-xs text-muted-foreground">
+        <span>⚠️</span>
+        <span>Uso exclusivamente informativo — não substitui validação oficial de RV ou faturamento.</span>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
