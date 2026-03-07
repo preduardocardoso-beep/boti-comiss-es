@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
 import { LogIn, UserPlus, Loader2 } from 'lucide-react';
 
 const Auth = () => {
@@ -178,6 +179,16 @@ const Auth = () => {
                     </>
                   )}
                 </Button>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
+                  <Label htmlFor="remember-me" className="text-sm text-muted-foreground cursor-pointer">
+                    Lembrar minha senha
+                  </Label>
+                </div>
                 <Link to="/forgot-password" className="block">
                   <Button
                     type="button"
