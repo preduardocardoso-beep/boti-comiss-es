@@ -43,6 +43,15 @@ const Auth = () => {
         variant: 'destructive',
       });
     } else {
+      if (rememberMe) {
+        localStorage.setItem('rv_saved_email', email);
+        localStorage.setItem('rv_saved_password', password);
+        localStorage.setItem('rv_remember_me', 'true');
+      } else {
+        localStorage.removeItem('rv_saved_email');
+        localStorage.removeItem('rv_saved_password');
+        localStorage.removeItem('rv_remember_me');
+      }
       toast({
         title: 'Bem-vindo!',
         description: 'Login realizado com sucesso.',
