@@ -7,11 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
 import { LogIn, UserPlus, Loader2 } from 'lucide-react';
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('rv_saved_email') || '');
+  const [password, setPassword] = useState(() => localStorage.getItem('rv_saved_password') || '');
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('rv_remember_me') === 'true');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -42,6 +44,15 @@ const Auth = () => {
         variant: 'destructive',
       });
     } else {
+      if (rememberMe) {
+        localStorage.setItem('rv_saved_email', email);
+        localStorage.setItem('rv_saved_password', password);
+        localStorage.setItem('rv_remember_me', 'true');
+      } else {
+        localStorage.removeItem('rv_saved_email');
+        localStorage.removeItem('rv_saved_password');
+        localStorage.removeItem('rv_remember_me');
+      }
       toast({
         title: 'Bem-vindo!',
         description: 'Login realizado com sucesso.',
@@ -168,6 +179,16 @@ const Auth = () => {
                     </>
                   )}
                 </Button>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
+                  <Label htmlFor="remember-me" className="text-sm text-muted-foreground cursor-pointer">
+                    Lembrar minha senha
+                  </Label>
+                </div>
                 <Link to="/forgot-password" className="block">
                   <Button
                     type="button"
