@@ -10,8 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { LogIn, UserPlus, Loader2 } from 'lucide-react';
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('rv_saved_email') || '');
+  const [password, setPassword] = useState(() => localStorage.getItem('rv_saved_password') || '');
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('rv_remember_me') === 'true');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
