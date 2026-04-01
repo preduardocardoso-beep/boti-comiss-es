@@ -1,4 +1,4 @@
-import { Trash2, Calendar, Hash } from 'lucide-react';
+import { Trash2, Calendar, Hash, BadgeCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OrderRecord } from '@/types/commission';
 
@@ -45,7 +45,11 @@ export const OrderList = ({ orders, onRemove, type }: OrderListProps) => {
               <p className="font-medium text-foreground truncate">
                 {order.clientName}
               </p>
-              <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground flex-wrap">
+                <span className="flex items-center gap-1">
+                  <BadgeCheck className="h-3 w-3" />
+                  {order.resellerCode || '—'}
+                </span>
                 <span className="flex items-center gap-1">
                   <Hash className="h-3 w-3" />
                   {order.orderNumber}

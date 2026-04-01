@@ -2,6 +2,7 @@ export interface OrderRecord {
   id: string;
   clientName: string;
   orderNumber: string;
+  resellerCode: string;
   date: string;
 }
 

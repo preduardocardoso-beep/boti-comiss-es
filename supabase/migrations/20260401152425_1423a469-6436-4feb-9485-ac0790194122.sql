@@ -1,0 +1,1 @@
+ALTER TABLE public.orders ADD COLUMN reseller_code text NOT NULL DEFAULT '';
