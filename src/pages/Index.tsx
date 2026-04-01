@@ -33,9 +33,23 @@ const Index = () => {
   const { history, loading: historyLoading, saveCycleSnapshot, deleteHistory } = useCycleHistory();
   const currentCycle = getCurrentCycle();
 
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('rv_active_tab') || 'inicios';
+  });
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    localStorage.setItem('rv_active_tab', value);
+  };
+
   // Redirect to auth if not logged in
-  if (!authLoading && !user) {
-    navigate('/auth');
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [authLoading, user, navigate]);
+
+  if (!user && !authLoading) {
     return null;
   }
 
