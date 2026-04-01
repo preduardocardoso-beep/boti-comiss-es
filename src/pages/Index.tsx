@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommission } from '@/hooks/useCommission';
@@ -32,9 +33,23 @@ const Index = () => {
   const { history, loading: historyLoading, saveCycleSnapshot, deleteHistory } = useCycleHistory();
   const currentCycle = getCurrentCycle();
 
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('rv_active_tab') || 'inicios';
+  });
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    localStorage.setItem('rv_active_tab', value);
+  };
+
   // Redirect to auth if not logged in
-  if (!authLoading && !user) {
-    navigate('/auth');
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [authLoading, user, navigate]);
+
+  if (!user && !authLoading) {
     return null;
   }
 
@@ -134,7 +149,7 @@ const Index = () => {
           reiniciosTierName={stats.reiniciosTier.name}
         />
 
-        <Tabs defaultValue="inicios" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="inicios" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
