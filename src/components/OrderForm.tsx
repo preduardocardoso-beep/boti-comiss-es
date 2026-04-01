@@ -1,92 +1,149 @@
-import { useState } from 'react';
-import { Plus, User, FileText, BadgeCheck, AlertTriangle } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, User, FileText, BadgeCheck, AlertTriangle, Eraser } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { OrderRecord } from '@/types/commission';
 
+type OrderType = 'inicio' | 'reinicio';
+
 interface OrderFormProps {
   onSubmit: (clientName: string, orderNumber: string, resellerCode: string) => void;
-  type: 'inicio' | 'reinicio';
+  type: OrderType;
   existingOrders: OrderRecord[];
 }
 
+interface OrderDraft {
+  clientName: string;
+  orderNumber: string;
+  resellerCode: string;
+}
+
+const EMPTY_DRAFT: OrderDraft = {
+  clientName: '',
+  orderNumber: '',
+  resellerCode: '',
+};
+
+const getDraftKey = (type: OrderType) => `rv_order_form_draft_${type}`;
+
+const readDraft = (type: OrderType): OrderDraft => {
+  if (typeof window === 'undefined') return EMPTY_DRAFT;
+
+  try {
+    const rawDraft = localStorage.getItem(getDraftKey(type));
+    if (!rawDraft) return EMPTY_DRAFT;
+
+    const parsed = JSON.parse(rawDraft) as Partial<OrderDraft>;
+
+    return {
+      clientName: parsed.clientName ?? '',
+      orderNumber: parsed.orderNumber ?? '',
+      resellerCode: parsed.resellerCode ?? '',
+    };
+  } catch {
+    return EMPTY_DRAFT;
+  }
+};
+
 export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) => {
-  const [clientName, setClientName] = useState('');
-  const [orderNumber, setOrderNumber] = useState('');
-  const [resellerCode, setResellerCode] = useState('');
-  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  const draftKey = useMemo(() => getDraftKey(type), [type]);
+  const initialDraft = useMemo(() => readDraft(type), [type]);
 
-  const checkDuplicate = (code: string) => {
-    if (!code.trim()) {
-      setDuplicateWarning(null);
-      return;
-    }
-    const existing = existingOrders.find(
-      (o) => o.resellerCode.toLowerCase() === code.trim().toLowerCase()
+  const [clientName, setClientName] = useState(initialDraft.clientName);
+  const [orderNumber, setOrderNumber] = useState(initialDraft.orderNumber);
+  const [resellerCode, setResellerCode] = useState(initialDraft.resellerCode);
+
+  useEffect(() => {
+    setClientName(initialDraft.clientName);
+    setOrderNumber(initialDraft.orderNumber);
+    setResellerCode(initialDraft.resellerCode);
+  }, [initialDraft]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    localStorage.setItem(
+      draftKey,
+      JSON.stringify({
+        clientName,
+        orderNumber,
+        resellerCode,
+      })
     );
-    if (existing) {
-      setDuplicateWarning(
-        `⚠️ O revendedor "${code.trim()}" já possui um pedido neste ciclo (Pedido: ${existing.orderNumber} - ${existing.clientName}).`
-      );
-    } else {
-      setDuplicateWarning(null);
-    }
-  };
+  }, [draftKey, clientName, orderNumber, resellerCode]);
 
-  const handleResellerCodeChange = (value: string) => {
-    setResellerCode(value);
-    checkDuplicate(value);
+  const duplicateWarning = useMemo(() => {
+    const code = resellerCode.trim().toLowerCase();
+    if (!code) return null;
+
+    const existing = existingOrders.find(
+      (o) => o.resellerCode.trim().toLowerCase() === code
+    );
+
+    if (!existing) return null;
+
+    return `⚠️ O revendedor "${resellerCode.trim()}" já possui um pedido neste ciclo (Pedido: ${existing.orderNumber} - ${existing.clientName}).`;
+  }, [resellerCode, existingOrders]);
+
+  const handleClearForm = () => {
+    setClientName('');
+    setOrderNumber('');
+    setResellerCode('');
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(draftKey);
+    }
+
+    toast({
+      title: 'Campos limpos',
+      description: 'Os dados digitados foram apagados com sucesso.',
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!clientName.trim()) {
       toast({
-        title: "Campo obrigatório",
-        description: "Por favor, informe o nome do cliente.",
-        variant: "destructive",
+        title: 'Campo obrigatório',
+        description: 'Por favor, informe o nome do cliente.',
+        variant: 'destructive',
       });
       return;
     }
-    
+
     if (!orderNumber.trim()) {
       toast({
-        title: "Campo obrigatório",
-        description: "Por favor, informe o número do pedido.",
-        variant: "destructive",
+        title: 'Campo obrigatório',
+        description: 'Por favor, informe o número do pedido.',
+        variant: 'destructive',
       });
       return;
     }
 
     if (!resellerCode.trim()) {
       toast({
-        title: "Campo obrigatório",
-        description: "Por favor, informe o código do revendedor.",
-        variant: "destructive",
+        title: 'Campo obrigatório',
+        description: 'Por favor, informe o código do revendedor.',
+        variant: 'destructive',
       });
       return;
     }
 
-    // Show warning toast if duplicate but still allow submission
     if (duplicateWarning) {
       toast({
-        title: "Atenção: Revendedor duplicado!",
+        title: 'Atenção: Revendedor duplicado!',
         description: duplicateWarning,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
 
     onSubmit(clientName, orderNumber, resellerCode.trim());
-    setClientName('');
-    setOrderNumber('');
-    setResellerCode('');
-    setDuplicateWarning(null);
-    
+
     toast({
-      title: type === 'inicio' ? "Início registrado!" : "Reinício registrado!",
+      title: type === 'inicio' ? 'Início registrado!' : 'Reinício registrado!',
       description: `Pedido de ${clientName.trim()} adicionado com sucesso.`,
     });
   };
@@ -106,7 +163,7 @@ export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) =>
           </AlertDescription>
         </Alert>
       )}
-      
+
       <div className="grid sm:grid-cols-3 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -120,7 +177,7 @@ export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) =>
             className="h-11"
           />
         </div>
-        
+
         <div className="space-y-2">
           <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -141,17 +198,24 @@ export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) =>
           </label>
           <Input
             value={resellerCode}
-            onChange={(e) => handleResellerCodeChange(e.target.value)}
+            onChange={(e) => setResellerCode(e.target.value)}
             placeholder="Ex: RV12345"
             className="h-11"
           />
         </div>
       </div>
-      
-      <Button type="submit" className="w-full h-11 text-base font-semibold">
-        <Plus className="h-4 w-4 mr-2" />
-        Registrar {type === 'inicio' ? 'Início' : 'Reinício'}
-      </Button>
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Button type="submit" className="w-full h-11 text-base font-semibold">
+          <Plus className="h-4 w-4 mr-2" />
+          Registrar {type === 'inicio' ? 'Início' : 'Reinício'}
+        </Button>
+
+        <Button type="button" variant="outline" onClick={handleClearForm} className="w-full sm:w-auto h-11">
+          <Eraser className="h-4 w-4 mr-2" />
+          Limpar campos
+        </Button>
+      </div>
     </form>
   );
 };
