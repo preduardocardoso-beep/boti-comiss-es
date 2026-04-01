@@ -119,7 +119,7 @@ export const useCommission = () => {
     fetchData();
   }, [user]);
 
-  const addInicio = useCallback(async (clientName: string, orderNumber: string) => {
+  const addInicio = useCallback(async (clientName: string, orderNumber: string, resellerCode: string = '') => {
     if (!user) return;
 
     const { data, error } = await supabase
@@ -129,6 +129,7 @@ export const useCommission = () => {
         type: 'inicio',
         client_name: clientName.trim(),
         order_number: orderNumber.trim(),
+        reseller_code: resellerCode.trim(),
       })
       .select()
       .single();
@@ -148,6 +149,7 @@ export const useCommission = () => {
           id: data.id,
           clientName: data.client_name,
           orderNumber: data.order_number,
+          resellerCode: data.reseller_code || '',
           date: data.created_at.split('T')[0],
         },
         ...prev,
