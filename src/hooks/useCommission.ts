@@ -97,6 +97,7 @@ export const useCommission = () => {
             id: o.id,
             clientName: o.client_name,
             orderNumber: o.order_number,
+            resellerCode: o.reseller_code || '',
             date: o.created_at.split('T')[0],
           }));
         const reiniciosData = ordersData
@@ -105,6 +106,7 @@ export const useCommission = () => {
             id: o.id,
             clientName: o.client_name,
             orderNumber: o.order_number,
+            resellerCode: o.reseller_code || '',
             date: o.created_at.split('T')[0],
           }));
         setInicios(iniciosData);
