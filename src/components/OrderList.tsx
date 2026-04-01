@@ -1,4 +1,4 @@
-import { Trash2, Calendar, Hash } from 'lucide-react';
+import { Trash2, Calendar, Hash, BadgeCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OrderRecord } from '@/types/commission';
 
