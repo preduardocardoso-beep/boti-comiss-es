@@ -149,7 +149,7 @@ const Index = () => {
           reiniciosTierName={stats.reiniciosTier.name}
         />
 
-        <Tabs defaultValue="inicios" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="inicios" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
