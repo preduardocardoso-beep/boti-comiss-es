@@ -142,6 +142,14 @@ export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) =>
 
     onSubmit(clientName, orderNumber, resellerCode.trim());
 
+    // Limpa os campos e o draft após registro bem-sucedido
+    setClientName('');
+    setOrderNumber('');
+    setResellerCode('');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(draftKey);
+    }
+
     toast({
       title: type === 'inicio' ? 'Início registrado!' : 'Reinício registrado!',
       description: `Pedido de ${clientName.trim()} adicionado com sucesso.`,
