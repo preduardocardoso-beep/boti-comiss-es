@@ -163,14 +163,6 @@ export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) =>
         Novo {type === 'inicio' ? 'Início' : 'Reinício'}
       </h3>
 
-      {duplicateWarning && (
-        <Alert variant="destructive" className="border-yellow-500/50 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-sm">
-            {duplicateWarning}
-          </AlertDescription>
-        </Alert>
-      )}
 
       <div className="grid sm:grid-cols-3 gap-4">
         <div className="space-y-2">
