@@ -78,6 +78,13 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Poppins', sans-serif;
+    overflow-x: hidden;
+  }
+
+  html,
+  #root {
+    width: 100%;
+    overflow-x: hidden;
   }
 }
 
@@ -85,7 +92,7 @@
   .card-premium {
     @apply bg-card rounded-xl border border-border/50;
     box-shadow: var(--card-shadow);
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    isolation: isolate;
   }
 
   .card-premium:hover {
@@ -109,5 +116,24 @@
 
   .badge-faixa {
     @apply px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide;
+  }
+
+  @media (max-width: 640px) {
+    .card-premium {
+      box-shadow: none;
+      transform: translateZ(0);
+    }
+
+    .card-premium:hover {
+      box-shadow: none;
+    }
+
+    .animate-count-up,
+    .animate-slide-up,
+    .animate-pulse-success,
+    .animate-in,
+    .slide-in-from-bottom-4 {
+      animation: none !important;
+    }
   }
 }

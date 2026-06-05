@@ -29,11 +29,11 @@ const StatCard = ({
   iconColor?: string;
   highlight?: boolean;
 }) => (
-  <div className={`card-premium p-5 ${highlight ? 'ring-2 ring-gold/50' : ''}`}>
+  <div className={`card-premium p-4 sm:p-5 ${highlight ? 'ring-2 ring-gold/50' : ''}`}>
     <div className="flex items-start justify-between">
       <div className="space-y-1">
         <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <p className={`text-2xl font-bold ${highlight ? 'text-gradient-gold' : 'text-foreground'} animate-count-up`}>
+        <p className={`text-2xl font-bold ${highlight ? 'text-gradient-gold' : 'text-foreground'}`}>
           {value}
         </p>
         {sublabel && (
@@ -58,7 +58,7 @@ const ProgressCard = ({
   progress: number;
   tierName: string;
 }) => (
-  <div className="card-premium p-5">
+  <div className="card-premium p-4 sm:p-5">
     <div className="flex items-center justify-between mb-3">
       <span className="text-sm font-medium text-muted-foreground">{label}</span>
       <span className={`badge-faixa ${
@@ -127,7 +127,7 @@ export const Dashboard = ({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 isolate">
         <StatCard
           icon={Users}
           label="Inícios"
