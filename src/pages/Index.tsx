@@ -98,7 +98,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 border-b border-border bg-background">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <ExportButton 
             inicios={data.inicios}
