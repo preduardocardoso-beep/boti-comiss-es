@@ -119,17 +119,17 @@ const Index = () => {
               reiniciosMeta: data.config.reiniciosMeta,
             }}
           />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <Button variant="outline" size="sm" onClick={() => navigate('/ciclos')} className="gap-1.5">
               <CalendarDays className="h-4 w-4" />
               <span className="sr-only sm:not-sr-only">Ciclos</span>
             </Button>
-            <span className="text-sm text-muted-foreground hidden sm:block">
+            <span className="text-sm text-muted-foreground hidden md:block truncate max-w-[200px]">
               {user?.email}
             </span>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
+              <LogOut className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>

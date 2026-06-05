@@ -105,22 +105,22 @@ export const Dashboard = ({
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl gradient-primary">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-2 rounded-xl gradient-primary shrink-0">
             <Sparkles className="h-6 w-6 text-primary-foreground" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Painel Promotores</h1>
-            <p className="text-sm text-muted-foreground">Controle de Resultados</p>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">Painel Promotores</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Controle de Resultados</p>
           </div>
         </div>
         {currentCycle && (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
-            <CalendarDays className="h-5 w-5 text-primary" />
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20 shrink-0">
+            <CalendarDays className="h-5 w-5 text-primary shrink-0" />
             <div className="text-right">
-              <p className="text-sm font-bold text-primary">{currentCycle.ciclo}</p>
-              <p className="text-xs text-muted-foreground">{currentCycle.inicio} - {currentCycle.fim}</p>
+              <p className="text-sm font-bold text-primary leading-tight">{currentCycle.ciclo}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">{currentCycle.inicio} - {currentCycle.fim}</p>
             </div>
           </div>
         )}

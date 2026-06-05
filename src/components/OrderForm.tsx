@@ -1,9 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, User, FileText, BadgeCheck, AlertTriangle, Eraser } from 'lucide-react';
+import { Plus, User, FileText, BadgeCheck, Eraser } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { OrderRecord } from '@/types/commission';
 
 type OrderType = 'inicio' | 'reinicio';
