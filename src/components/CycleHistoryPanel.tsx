@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { History, Trash2, Users, RefreshCw, Award, ChevronDown, ChevronUp, FileSpreadsheet } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { History, Trash2, Users, RefreshCw, Award, ChevronDown, ChevronUp, FileSpreadsheet, Folder } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { CycleHistoryRecord } from '@/hooks/useCycleHistory';
 import { Button } from '@/components/ui/button';
@@ -28,20 +28,50 @@ interface OrderItem {
   date?: string;
 }
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+const formatDate = (dateStr: string) =>
+  new Date(dateStr).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+
+// Extract numeric cycle ID from a name like "Ciclo 8" / "Ciclo 08/2025"
+const extractCycleNumber = (name: string): number => {
+  const m = name.match(/\d+/);
+  return m ? parseInt(m[0], 10) : 0;
+};
+
 export const CycleHistoryPanel = ({ history, onDelete }: CycleHistoryPanelProps) => {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [expandedGroup, setExpandedGroup] = useState<Record<string, boolean>>({});
+  const [expandedRecord, setExpandedRecord] = useState<Record<string, boolean>>({});
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  // Group by cycle_name, sort cycles desc (Ciclo 8, 7, 6...)
+  const groups = useMemo(() => {
+    const map = new Map<string, CycleHistoryRecord[]>();
+    history.forEach((r) => {
+      const list = map.get(r.cycle_name) ?? [];
+      list.push(r);
+      map.set(r.cycle_name, list);
+    });
+    return Array.from(map.entries())
+      .map(([name, records]) => ({
+        name,
+        number: extractCycleNumber(name),
+        records: records.sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        ),
+      }))
+      .sort((a, b) => b.number - a.number);
+  }, [history]);
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const toggleGroup = (name: string) =>
+    setExpandedGroup((p) => ({ ...p, [name]: !p[name] }));
+  const toggleRecord = (id: string) =>
+    setExpandedRecord((p) => ({ ...p, [id]: !p[id] }));
 
-  const toggle = (id: string) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
-
-  const exportCycle = (record: CycleHistoryRecord) => {
+  const exportRecord = (record: CycleHistoryRecord) => {
     const wb = XLSX.utils.book_new();
-
     const resumo = [
       ['RELATÓRIO DO CICLO'],
       [''],
@@ -55,19 +85,79 @@ export const CycleHistoryPanel = ({ history, onDelete }: CycleHistoryPanelProps)
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumo), 'Resumo');
 
     const header = [['Código Revendedor', 'Nome do Cliente', 'Número do Pedido', 'Data']];
-    const iniciosRows = (record.inicios_data as OrderItem[]).map((o) => [
-      o.resellerCode ?? '', o.clientName ?? '', o.orderNumber ?? '', o.date ?? '',
-    ]);
-    const reiniciosRows = (record.reinicios_data as OrderItem[]).map((o) => [
-      o.resellerCode ?? '', o.clientName ?? '', o.orderNumber ?? '', o.date ?? '',
-    ]);
+    const toRows = (arr: OrderItem[]) =>
+      arr.map((o) => [o.resellerCode ?? '', o.clientName ?? '', o.orderNumber ?? '', o.date ?? '']);
 
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...header, ...iniciosRows]), 'Inícios');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...header, ...reiniciosRows]), 'Reinícios');
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([...header, ...toRows((record.inicios_data as OrderItem[]) ?? [])]),
+      'Inícios',
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([...header, ...toRows((record.reinicios_data as OrderItem[]) ?? [])]),
+      'Reinícios',
+    );
 
     const safeName = record.cycle_name.replace(/[^\w\-]+/g, '_');
-    XLSX.writeFile(wb, `Relatorio_${safeName}.xlsx`);
+    XLSX.writeFile(wb, `Relatorio_${safeName}_${record.id.slice(0, 6)}.xlsx`);
     toast({ title: 'Planilha exportada!', description: `Arquivo do ${record.cycle_name} baixado.` });
+  };
+
+  const exportGroup = (groupName: string, records: CycleHistoryRecord[]) => {
+    const wb = XLSX.utils.book_new();
+
+    // Sheet: Resumo consolidado do ciclo
+    const totalInicios = records.reduce((s, r) => s + r.inicios_count, 0);
+    const totalReinicios = records.reduce((s, r) => s + r.reinicios_count, 0);
+    const totalCommission = records.reduce((s, r) => s + Number(r.total_commission), 0);
+
+    const resumo: (string | number)[][] = [
+      [`RELATÓRIO CONSOLIDADO - ${groupName}`],
+      [''],
+      ['Snapshots salvos', records.length],
+      ['Total Inícios', totalInicios],
+      ['Total Reinícios', totalReinicios],
+      ['Comissão Total', formatCurrency(totalCommission)],
+      [''],
+      ['Histórico de snapshots:'],
+      ['Data', 'Inícios', 'Reinícios', 'Comissão'],
+      ...records.map((r) => [
+        formatDate(r.created_at),
+        r.inicios_count,
+        r.reinicios_count,
+        formatCurrency(Number(r.total_commission)),
+      ]),
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumo), 'Resumo');
+
+    const header = [['Snapshot', 'Código Revendedor', 'Nome do Cliente', 'Número do Pedido', 'Data']];
+
+    const allInicios = records.flatMap((r) =>
+      ((r.inicios_data as OrderItem[]) ?? []).map((o) => [
+        formatDate(r.created_at),
+        o.resellerCode ?? '',
+        o.clientName ?? '',
+        o.orderNumber ?? '',
+        o.date ?? '',
+      ]),
+    );
+    const allReinicios = records.flatMap((r) =>
+      ((r.reinicios_data as OrderItem[]) ?? []).map((o) => [
+        formatDate(r.created_at),
+        o.resellerCode ?? '',
+        o.clientName ?? '',
+        o.orderNumber ?? '',
+        o.date ?? '',
+      ]),
+    );
+
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...header, ...allInicios]), 'Inícios');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...header, ...allReinicios]), 'Reinícios');
+
+    const safeName = groupName.replace(/[^\w\-]+/g, '_');
+    XLSX.writeFile(wb, `Consolidado_${safeName}.xlsx`);
+    toast({ title: 'Planilha consolidada!', description: `Todos os pedidos do ${groupName} baixados.` });
   };
 
   if (history.length === 0) {
@@ -84,91 +174,145 @@ export const CycleHistoryPanel = ({ history, onDelete }: CycleHistoryPanelProps)
 
   return (
     <div className="space-y-4">
-      {history.map((record) => {
-        const isOpen = !!expanded[record.id];
-        const inicios = (record.inicios_data as OrderItem[]) ?? [];
-        const reinicios = (record.reinicios_data as OrderItem[]) ?? [];
+      {groups.map((group) => {
+        const isGroupOpen = !!expandedGroup[group.name];
+        const totalInicios = group.records.reduce((s, r) => s + r.inicios_count, 0);
+        const totalReinicios = group.records.reduce((s, r) => s + r.reinicios_count, 0);
+        const totalCommission = group.records.reduce((s, r) => s + Number(r.total_commission), 0);
 
         return (
-          <div key={record.id} className="card-premium p-5 space-y-4">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="px-3 py-1 rounded-lg bg-primary/10">
-                  <span className="text-sm font-bold text-primary">{record.cycle_name}</span>
+          <div key={group.name} className="card-premium overflow-hidden">
+            <div className="p-4 bg-primary/5 flex items-center justify-between gap-2 flex-wrap">
+              <button
+                onClick={() => toggleGroup(group.name)}
+                className="flex items-center gap-2 flex-1 min-w-0 text-left"
+              >
+                <Folder className="h-5 w-5 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <p className="font-bold text-foreground truncate">{group.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {group.records.length} {group.records.length === 1 ? 'snapshot' : 'snapshots'} •{' '}
+                    {totalInicios} inícios • {totalReinicios} reinícios •{' '}
+                    <span className="text-primary font-semibold">{formatCurrency(totalCommission)}</span>
+                  </p>
                 </div>
-                <span className="text-xs text-muted-foreground">{formatDate(record.created_at)}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" onClick={() => exportCycle(record)} className="gap-1.5">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  <span className="hidden sm:inline">Excel</span>
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Deletar relatório?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        O relatório do {record.cycle_name} será removido permanentemente.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onDelete(record.id)} className="bg-destructive hover:bg-destructive/90">
-                        Deletar
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+                {isGroupOpen ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                )}
+              </button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => exportGroup(group.name, group.records)}
+                className="gap-1.5"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                <span className="hidden sm:inline">Excel do ciclo</span>
+                <span className="sm:hidden">Excel</span>
+              </Button>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                <Users className="h-4 w-4 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Inícios</p>
-                  <p className="text-sm font-bold text-foreground">{record.inicios_count}</p>
-                  <p className="text-xs text-primary">{formatCurrency(record.inicios_commission)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                <RefreshCw className="h-4 w-4 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Reinícios</p>
-                  <p className="text-sm font-bold text-foreground">{record.reinicios_count}</p>
-                  <p className="text-xs text-primary">{formatCurrency(record.reinicios_commission)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                <Award className="h-4 w-4 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Total</p>
-                  <p className="text-sm font-bold text-primary">{formatCurrency(record.total_commission)}</p>
-                </div>
-              </div>
-            </div>
+            {isGroupOpen && (
+              <div className="p-4 space-y-3 border-t border-border">
+                {group.records.map((record) => {
+                  const isOpen = !!expandedRecord[record.id];
+                  const inicios = (record.inicios_data as OrderItem[]) ?? [];
+                  const reinicios = (record.reinicios_data as OrderItem[]) ?? [];
 
-            {record.inicios_tier_name && record.reinicios_tier_name && (
-              <div className="flex gap-2 text-xs flex-wrap">
-                <span className="px-2 py-1 rounded bg-primary/10 text-primary">Inícios: {record.inicios_tier_name}</span>
-                <span className="px-2 py-1 rounded bg-primary/10 text-primary">Reinícios: {record.reinicios_tier_name}</span>
-              </div>
-            )}
+                  return (
+                    <div key={record.id} className="rounded-lg border border-border p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-xs text-muted-foreground">
+                          Salvo em {formatDate(record.created_at)}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => exportRecord(record)}
+                            className="gap-1.5"
+                          >
+                            <FileSpreadsheet className="h-4 w-4" />
+                            <span className="hidden sm:inline">Excel</span>
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Deletar snapshot?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Este snapshot do {record.cycle_name} será removido permanentemente.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => onDelete(record.id)}
+                                  className="bg-destructive hover:bg-destructive/90"
+                                >
+                                  Deletar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
 
-            <Button variant="ghost" size="sm" onClick={() => toggle(record.id)} className="w-full justify-center gap-1.5">
-              {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              {isOpen ? 'Ocultar detalhes' : 'Ver pedidos detalhados'}
-            </Button>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                          <Users className="h-4 w-4 text-primary" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Inícios</p>
+                            <p className="text-sm font-bold text-foreground">{record.inicios_count}</p>
+                            <p className="text-xs text-primary">{formatCurrency(record.inicios_commission)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                          <RefreshCw className="h-4 w-4 text-primary" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Reinícios</p>
+                            <p className="text-sm font-bold text-foreground">{record.reinicios_count}</p>
+                            <p className="text-xs text-primary">{formatCurrency(record.reinicios_commission)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                          <Award className="h-4 w-4 text-primary" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Total</p>
+                            <p className="text-sm font-bold text-primary">{formatCurrency(record.total_commission)}</p>
+                          </div>
+                        </div>
+                      </div>
 
-            {isOpen && (
-              <div className="space-y-4 pt-2 border-t border-border">
-                <DetailsTable title="Inícios" rows={inicios} />
-                <DetailsTable title="Reinícios" rows={reinicios} />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleRecord(record.id)}
+                        className="w-full justify-center gap-1.5"
+                      >
+                        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        {isOpen ? 'Ocultar detalhes' : 'Ver pedidos detalhados'}
+                      </Button>
+
+                      {isOpen && (
+                        <div className="space-y-4 pt-2 border-t border-border">
+                          <DetailsTable title="Inícios" rows={inicios} />
+                          <DetailsTable title="Reinícios" rows={reinicios} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -190,7 +334,9 @@ const DetailsTable = ({ title, rows }: { title: string; rows: OrderItem[] }) => 
 
   return (
     <div>
-      <h4 className="text-sm font-semibold text-foreground mb-2">{title} ({rows.length})</h4>
+      <h4 className="text-sm font-semibold text-foreground mb-2">
+        {title} ({rows.length})
+      </h4>
       <div className="overflow-x-auto rounded-md border border-border">
         <table className="w-full text-xs">
           <thead className="bg-muted/50">
