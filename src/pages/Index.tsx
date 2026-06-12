@@ -190,7 +190,7 @@ const Index = () => {
 
           <TabsContent value="reinicios" className="space-y-6">
             <div className="grid lg:grid-cols-2 gap-6">
-              <OrderForm onSubmit={addReinicio} type="reinicio" existingOrders={data.reinicios} />
+              <OrderForm onSubmit={addReinicio} type="reinicio" existingOrders={[...data.inicios, ...data.reinicios]} />
               <CommissionSummary 
                 count={data.reinicios.length}
                 tier={stats.reiniciosTier}
