@@ -133,10 +133,11 @@ export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) =>
 
     if (duplicateWarning) {
       toast({
-        title: 'Atenção: Revendedor duplicado!',
+        title: 'Revendedor já fez pedido!',
         description: duplicateWarning,
         variant: 'destructive',
       });
+      return;
     }
 
     onSubmit(clientName, orderNumber, resellerCode.trim());
