@@ -199,10 +199,20 @@ export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) =>
             value={resellerCode}
             onChange={(e) => setResellerCode(e.target.value)}
             placeholder="Ex: RV12345"
-            className="h-11"
+            className={`h-11 ${duplicateWarning ? 'border-destructive focus-visible:ring-destructive' : ''}`}
           />
         </div>
       </div>
+
+      {duplicateWarning && (
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive flex items-start gap-2">
+          <span aria-hidden>⚠️</span>
+          <span>
+            <strong>Revendedor já fez pedido neste ciclo.</strong>{' '}
+            {duplicateWarning.replace(/^⚠️\s*/, '')}
+          </span>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-3">
         <Button type="submit" className="w-full h-11 text-base font-semibold">
