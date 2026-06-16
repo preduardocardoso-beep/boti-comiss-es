@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommission } from '@/hooks/useCommission';
 import { useCycleHistory } from '@/hooks/useCycleHistory';
-import { getCurrentCycle } from '@/lib/getCurrentCycle';
+import { getCurrentCycle, getClosingCycle } from '@/lib/getCurrentCycle';
 import { Dashboard } from '@/components/Dashboard';
 import { OrderForm } from '@/components/OrderForm';
 import { OrderList } from '@/components/OrderList';
@@ -80,7 +80,8 @@ const Index = () => {
   const sonhoGrandeReinicioValue = stats.reiniciosTiers[stats.reiniciosTiers.length - 1]?.value || 20;
 
   const handleSaveCycleBeforeReset = async () => {
-    const cycleName = currentCycle?.ciclo || `Ciclo ${new Date().toLocaleDateString('pt-BR')}`;
+    const closingCycle = getClosingCycle();
+    const cycleName = closingCycle?.ciclo || currentCycle?.ciclo || `Ciclo ${new Date().toLocaleDateString('pt-BR')}`;
     await saveCycleSnapshot({
       cycleName,
       iniciosCount: stats.iniciosCount,
