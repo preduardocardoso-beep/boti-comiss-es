@@ -10,6 +10,7 @@ import UpdatePassword from "./pages/UpdatePassword";
 import Ciclos from "./pages/Ciclos";
 import NotFound from "./pages/NotFound";
 import InstallPWA from "./components/InstallPWA";
+import { WorldCupAnimation } from "./components/WorldCupAnimation";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
         <InstallPWA />
+        <WorldCupAnimation />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
