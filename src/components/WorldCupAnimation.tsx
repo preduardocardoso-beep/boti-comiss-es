@@ -1,263 +1,310 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-// Animações da Copa do Mundo - exibidas até 19/07/2026 ou até remoção manual
-const END_DATE = new Date('2026-07-19T23:59:59');
+// Tema Copa do Mundo — desativa automaticamente após 19/07/2026
+export const WORLD_CUP_END = new Date('2026-07-19T23:59:59');
 
+export const isWorldCupActive = () => {
+  if (typeof window === 'undefined') return false;
+  if (localStorage.getItem('worldcup_theme_off') === '1') return false;
+  return new Date() <= WORLD_CUP_END;
+};
+
+/**
+ * WorldCupAnimation — camada visual premium global.
+ * Renderiza:
+ *  - Faixa superior tricolor discreta
+ *  - Partículas douradas sutis (GPU only, transform/opacity)
+ * Não bloqueia cliques (pointer-events: none).
+ */
 export const WorldCupAnimation = () => {
-  const [visible, setVisible] = useState(false);
+  const [active, setActive] = useState(false);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem('worldcup_animation_dismissed') === '1';
-    const now = new Date();
-    setVisible(!dismissed && now <= END_DATE);
+    setActive(isWorldCupActive());
   }, []);
 
-  if (!visible) return null;
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 14 }).map((_, i) => ({
+        left: Math.random() * 100,
+        delay: Math.random() * 12,
+        duration: 14 + Math.random() * 10,
+        size: 3 + Math.random() * 3,
+        opacity: 0.25 + Math.random() * 0.35,
+        key: i,
+      })),
+    []
+  );
+
+  if (!active) return null;
 
   return (
     <>
       <style>{`
-        @keyframes wc-fly-left {
-          0% { transform: translateX(-10vw); }
-          100% { transform: translateX(110vw); }
-        }
-        @keyframes wc-fly-right {
-          0% { transform: translateX(110vw); }
-          100% { transform: translateX(-10vw); }
-        }
-        @keyframes wc-wave {
-          0%, 100% { transform: rotate(-8deg); }
-          50% { transform: rotate(8deg); }
-        }
-        @keyframes wc-juggle-body {
-          0%, 100% { transform: translateY(0); }
-          25% { transform: translateY(-4px) rotate(-2deg); }
-          50% { transform: translateY(0) rotate(0deg); }
-          75% { transform: translateY(-4px) rotate(2deg); }
-        }
-        @keyframes wc-juggle-ball {
-          0%   { transform: translate(-14px, -10px) rotate(0deg); }
-          15%  { transform: translate(-18px, -38px) rotate(90deg); }
-          30%  { transform: translate(-14px, -10px) rotate(180deg); }
-          45%  { transform: translate(0px,   -6px)  rotate(270deg); }
-          60%  { transform: translate(14px,  -10px) rotate(360deg); }
-          75%  { transform: translate(18px,  -38px) rotate(450deg); }
-          90%  { transform: translate(14px,  -10px) rotate(540deg); }
-          100% { transform: translate(-14px, -10px) rotate(630deg); }
-        }
-        @keyframes wc-pop {
-          0% { transform: scale(0); opacity: 0; }
-          100% { transform: scale(1); opacity: 1; }
+        @keyframes wc-rise {
+          0%   { transform: translate3d(0, 20px, 0);  opacity: 0; }
+          15%  { opacity: var(--wc-op, 0.5); }
+          85%  { opacity: var(--wc-op, 0.5); }
+          100% { transform: translate3d(0, -110vh, 0); opacity: 0; }
         }
         .wc-flag-strip {
-          position: fixed;
-          top: 0; left: 0; right: 0;
-          height: 6px;
-          background: linear-gradient(90deg, #009C3B 0 33%, #FFDF00 33% 66%, #002776 66% 100%);
-          z-index: 9998;
+          position: fixed; top: 0; left: 0; right: 0;
+          height: 3px;
+          background: linear-gradient(90deg,
+            #009C3B 0 33%, #FFDF00 33% 66%, #002776 66% 100%);
+          z-index: 60;
           pointer-events: none;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+          opacity: 0.85;
         }
-        .wc-floating-flag {
-          position: fixed;
-          top: 70px;
-          font-size: 22px;
-          z-index: 9998;
+        .wc-particles {
+          position: fixed; inset: 0;
           pointer-events: none;
-          animation: wc-fly-left 22s linear infinite;
-          filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+          z-index: 1;
+          overflow: hidden;
+          contain: strict;
         }
-        .wc-floating-flag.f2 {
-          top: 140px;
-          font-size: 18px;
-          animation: wc-fly-right 28s linear infinite;
-          animation-delay: -8s;
-        }
-        .wc-floating-flag.f3 {
-          top: auto;
-          bottom: 90px;
-          font-size: 20px;
-          animation: wc-fly-left 26s linear infinite;
-          animation-delay: -14s;
-        }
-        .wc-player-wrap {
-          position: fixed;
-          left: 8px;
-          bottom: 8px;
-          z-index: 9999;
-          animation: wc-pop 0.6s ease-out;
-          pointer-events: none; /* não bloqueia botões */
-        }
-        .wc-player-card {
-          position: relative;
-          background: linear-gradient(135deg, rgba(0,156,59,0.92), rgba(0,122,46,0.92));
-          border: 2px solid #FFDF00;
-          border-radius: 14px;
-          padding: 6px 8px 4px;
-          box-shadow: 0 6px 18px rgba(0,0,0,0.22);
-          display: flex;
-          align-items: flex-end;
-          gap: 4px;
-          backdrop-filter: blur(2px);
-        }
-        .wc-player-svg {
-          width: 48px;
-          height: 64px;
-          animation: wc-juggle-body 1s ease-in-out infinite;
-          transform-origin: center bottom;
-        }
-        .wc-ball-svg {
+        .wc-particle {
           position: absolute;
-          left: 50%;
-          top: 14px;
-          width: 16px;
-          height: 16px;
-          animation: wc-juggle-ball 1s ease-in-out infinite;
-        }
-        .wc-flag-wave {
-          font-size: 18px;
-          display: inline-block;
-          animation: wc-wave 1.6s ease-in-out infinite;
-          transform-origin: bottom center;
-        }
-        .wc-close {
-          position: absolute;
-          top: -8px;
-          right: -8px;
-          width: 22px;
-          height: 22px;
+          bottom: -20px;
           border-radius: 50%;
-          background: #fff;
-          color: #002776;
-          border: 2px solid #FFDF00;
-          font-size: 13px;
-          line-height: 1;
-          font-weight: 700;
-          cursor: pointer;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          pointer-events: auto; /* só o X é clicável */
+          background: radial-gradient(circle at 30% 30%, #ffe27a, #d4af37 65%, transparent 72%);
+          filter: blur(0.3px);
+          animation-name: wc-rise;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+          will-change: transform, opacity;
         }
         @media (prefers-reduced-motion: reduce) {
-          .wc-floating-flag, .wc-player-svg, .wc-ball-svg, .wc-flag-wave {
-            animation: none !important;
-          }
+          .wc-particle { animation: none !important; display: none; }
         }
       `}</style>
 
-      <div className="wc-flag-strip" />
-      <div className="wc-floating-flag" aria-hidden>🇧🇷</div>
-      <div className="wc-floating-flag f2" aria-hidden>🇧🇷</div>
-      <div className="wc-floating-flag f3" aria-hidden>🏆</div>
-
-      <div className="wc-player-wrap" aria-hidden>
-        <div className="wc-player-card">
-          <button
-            className="wc-close"
-            onClick={() => {
-              localStorage.setItem('worldcup_animation_dismissed', '1');
-              setVisible(false);
+      <div className="wc-flag-strip" aria-hidden />
+      <div className="wc-particles" aria-hidden>
+        {particles.map((p) => (
+          <span
+            key={p.key}
+            className="wc-particle"
+            style={{
+              left: `${p.left}%`,
+              width: p.size,
+              height: p.size,
+              animationDelay: `-${p.delay}s`,
+              animationDuration: `${p.duration}s`,
+              // @ts-expect-error CSS var
+              '--wc-op': p.opacity,
             }}
-            aria-label="Fechar animação Copa"
-            title="Fechar"
-          >×</button>
+          />
+        ))}
+      </div>
+    </>
+  );
+};
 
-          <span className="wc-flag-wave">🇧🇷</span>
+/** Banner discreto "Temporada da Copa" — aparece só enquanto tema ativo */
+export const WorldCupBanner = () => {
+  const [active, setActive] = useState(false);
+  useEffect(() => setActive(isWorldCupActive()), []);
+  if (!active) return null;
 
-          <div style={{ position: 'relative' }}>
-            {/* Bonequinho jogador - estilo mais realista */}
-            <svg className="wc-player-svg" viewBox="0 0 56 74" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="wcSkin" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#e8b48a"/>
-                  <stop offset="1" stopColor="#b8895f"/>
-                </linearGradient>
-                <linearGradient id="wcShirt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#FFE94A"/>
-                  <stop offset="1" stopColor="#E5C200"/>
-                </linearGradient>
-                <linearGradient id="wcShort" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#003a9e"/>
-                  <stop offset="1" stopColor="#001a55"/>
-                </linearGradient>
-                <radialGradient id="wcBall" cx="0.35" cy="0.35" r="0.7">
-                  <stop offset="0" stopColor="#ffffff"/>
-                  <stop offset="1" stopColor="#cfcfcf"/>
-                </radialGradient>
-              </defs>
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl border border-[#FFDF00]/40"
+      style={{
+        background:
+          'linear-gradient(120deg, #003a1c 0%, #006B3F 45%, #0a3a8a 100%)',
+        boxShadow: '0 8px 24px -12px rgba(0,0,0,0.35)',
+      }}
+    >
+      {/* Textura sutil de estádio */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.12]"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(90deg, #ffffff 0 1px, transparent 1px 24px)',
+        }}
+      />
+      {/* Faixa tricolor lateral */}
+      <div
+        aria-hidden
+        className="absolute left-0 top-0 bottom-0 w-1.5"
+        style={{
+          background:
+            'linear-gradient(180deg,#009C3B 0 33%,#FFDF00 33% 66%,#002776 66% 100%)',
+        }}
+      />
+      <div className="relative flex items-center gap-3 p-4 sm:p-5">
+        <div
+          className="shrink-0 h-11 w-11 rounded-xl flex items-center justify-center"
+          style={{
+            background:
+              'linear-gradient(135deg,#FFDF00,#e6b800)',
+            boxShadow: '0 4px 12px rgba(255,223,0,0.35)',
+          }}
+        >
+          <span className="text-xl">🏆</span>
+        </div>
+        <div className="min-w-0">
+          <p
+            className="text-sm sm:text-base font-bold tracking-wide text-white truncate"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+          >
+            TEMPORADA DA COPA
+          </p>
+          <p className="text-[11px] sm:text-xs text-white/85 truncate">
+            Transforme cada venda em um gol rumo aos seus objetivos.
+          </p>
+        </div>
+        <div aria-hidden className="ml-auto hidden sm:flex items-center gap-1">
+          <span className="text-lg">🇧🇷</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-              {/* Pescoço */}
-              <rect x="25" y="17" width="6" height="5" fill="url(#wcSkin)"/>
+/**
+ * GoalCelebration — dispara comemoração premium ao bater METAS.
+ * Uso: <GoalCelebration trigger={tierName} enabled />
+ * Detecta transição para 'Meta' | 'Super Meta' | 'Sonho Grande'.
+ */
+type CelebrationTier = 'Meta' | 'Super Meta' | 'Sonho Grande';
+const MESSAGES: Record<CelebrationTier, { emoji: string; title: string; sub: string }> = {
+  Meta: {
+    emoji: '⚽',
+    title: 'GOOOOOL!',
+    sub: 'Você atingiu sua META. Continue avançando.',
+  },
+  'Super Meta': {
+    emoji: '🏆',
+    title: 'GOOOOOL!',
+    sub: 'Você atingiu sua SUPER META. Desempenho acima da média.',
+  },
+  'Sonho Grande': {
+    emoji: '👑',
+    title: 'GOOOOOL HISTÓRICO!',
+    sub: 'Você conquistou seu SONHO GRANDE. Resultado extraordinário.',
+  },
+};
 
-              {/* Cabeça */}
-              <ellipse cx="28" cy="11" rx="7" ry="8" fill="url(#wcSkin)"/>
-              {/* Cabelo */}
-              <path d="M21 9 Q22 2 28 2 Q35 2 35 10 Q33 6 28 5.5 Q23 6 21 9 Z" fill="#2a1608"/>
-              {/* Orelhas */}
-              <ellipse cx="20.5" cy="12" rx="1.5" ry="2" fill="url(#wcSkin)"/>
-              <ellipse cx="35.5" cy="12" rx="1.5" ry="2" fill="url(#wcSkin)"/>
-              {/* Olhos */}
-              <circle cx="25.5" cy="11.5" r="0.9" fill="#1a1208"/>
-              <circle cx="30.5" cy="11.5" r="0.9" fill="#1a1208"/>
-              {/* Sobrancelhas */}
-              <path d="M24 9.5 L27 9.2" stroke="#2a1608" strokeWidth="0.8" strokeLinecap="round"/>
-              <path d="M29 9.2 L32 9.5" stroke="#2a1608" strokeWidth="0.8" strokeLinecap="round"/>
-              {/* Boca */}
-              <path d="M26 14.5 Q28 16 30 14.5" stroke="#5a2a1a" strokeWidth="0.8" fill="none" strokeLinecap="round"/>
+export const GoalCelebration = ({
+  tierName,
+  storageKey,
+}: {
+  tierName: string;
+  storageKey: string; // ex: 'wc_celebrated_inicios'
+}) => {
+  const [show, setShow] = useState<CelebrationTier | null>(null);
+  const timerRef = useRef<number | null>(null);
 
-              {/* Camisa amarela com sombra */}
-              <path d="M13 23 L43 23 L41 47 L15 47 Z" fill="url(#wcShirt)" stroke="#009C3B" strokeWidth="1.2"/>
-              {/* Gola verde V */}
-              <path d="M23 23 L28 30 L33 23 L31 23 L28 27 L25 23 Z" fill="#009C3B"/>
-              {/* Listra lateral verde */}
-              <path d="M13 23 L15 47 L17 47 L15.5 23 Z" fill="#009C3B" opacity="0.4"/>
-              <path d="M43 23 L41 47 L39 47 L40.5 23 Z" fill="#009C3B" opacity="0.4"/>
-              {/* Número 10 */}
-              <text x="28" y="40" textAnchor="middle" fontSize="9" fontWeight="800" fill="#002776" fontFamily="Arial">10</text>
-              {/* Escudo CBF estilizado */}
-              <circle cx="20" cy="29" r="2" fill="#009C3B" stroke="#fff" strokeWidth="0.4"/>
+  useEffect(() => {
+    if (!isWorldCupActive()) return;
+    const valid: CelebrationTier[] = ['Meta', 'Super Meta', 'Sonho Grande'];
+    if (!valid.includes(tierName as CelebrationTier)) return;
 
-              {/* Braços com músculo */}
-              <path d="M13 24 Q9 28 9 38 Q9 42 12 42 L14 42 Q14 32 15 24 Z" fill="url(#wcShirt)" stroke="#009C3B" strokeWidth="0.8"/>
-              <path d="M43 24 Q47 28 47 38 Q47 42 44 42 L42 42 Q42 32 41 24 Z" fill="url(#wcShirt)" stroke="#009C3B" strokeWidth="0.8"/>
-              {/* Mãos */}
-              <circle cx="11" cy="43" r="2.5" fill="url(#wcSkin)"/>
-              <circle cx="45" cy="43" r="2.5" fill="url(#wcSkin)"/>
+    const already = localStorage.getItem(storageKey);
+    if (already === tierName) return;
 
-              {/* Calção azul */}
-              <path d="M15 47 L41 47 L39 58 L29 58 L28 50 L27 58 L17 58 Z" fill="url(#wcShort)"/>
-              {/* Detalhe amarelo no calção */}
-              <path d="M27 50 L29 50 L28 58 Z" fill="#FFDF00" opacity="0.6"/>
+    localStorage.setItem(storageKey, tierName);
+    setShow(tierName as CelebrationTier);
+    if (navigator.vibrate) navigator.vibrate([40, 30, 60]);
 
-              {/* Pernas musculosas */}
-              <path d="M19 58 Q18 64 20 70 L25 70 Q25 64 24 58 Z" fill="url(#wcSkin)"/>
-              <path d="M32 58 Q31 64 32 70 L37 70 Q38 64 37 58 Z" fill="url(#wcSkin)"/>
-              {/* Meiões amarelos */}
-              <rect x="19" y="66" width="6" height="5" fill="#FFDF00" stroke="#009C3B" strokeWidth="0.5"/>
-              <rect x="32" y="66" width="6" height="5" fill="#FFDF00" stroke="#009C3B" strokeWidth="0.5"/>
-              {/* Chuteiras */}
-              <ellipse cx="21" cy="72" rx="5" ry="2" fill="#0a0a0a"/>
-              <ellipse cx="35" cy="72" rx="5" ry="2" fill="#0a0a0a"/>
-              <path d="M16.5 72 L25.5 72" stroke="#fff" strokeWidth="0.5"/>
-              <path d="M30.5 72 L39.5 72" stroke="#fff" strokeWidth="0.5"/>
-            </svg>
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => setShow(null), 3000);
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+    };
+  }, [tierName, storageKey]);
 
-            {/* Bola da copa estilo Telstar */}
-            <svg className="wc-ball-svg" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="10" cy="10" r="9" fill="url(#wcBall)" stroke="#111" strokeWidth="0.8"/>
-              <polygon points="10,5.5 13,7.4 11.8,10.8 8.2,10.8 7,7.4" fill="#111"/>
-              <polygon points="10,2 13.5,4 13,7.4 10,5.5 7,7.4 6.5,4" fill="#111" opacity="0.85"/>
-              <line x1="11.8" y1="10.8" x2="15" y2="13" stroke="#111" strokeWidth="0.6"/>
-              <line x1="8.2" y1="10.8" x2="5" y2="13" stroke="#111" strokeWidth="0.6"/>
-              <line x1="13" y1="7.4" x2="17" y2="7" stroke="#111" strokeWidth="0.6"/>
-              <line x1="7" y1="7.4" x2="3" y2="7" stroke="#111" strokeWidth="0.6"/>
-              <circle cx="7" cy="7" r="0.6" fill="#fff" opacity="0.7"/>
-            </svg>
+  if (!show) return null;
+  const msg = MESSAGES[show];
+
+  const confetti = Array.from({ length: 28 });
+
+  return (
+    <>
+      <style>{`
+        @keyframes wc-goal-in {
+          0% { transform: scale(0.7); opacity: 0; }
+          50% { transform: scale(1.08); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes wc-goal-glow {
+          0%,100% { box-shadow: 0 0 30px rgba(255,223,0,0.35); }
+          50%     { box-shadow: 0 0 60px rgba(255,223,0,0.75); }
+        }
+        @keyframes wc-confetti-fall {
+          0%   { transform: translate3d(0,-20vh,0) rotate(0deg); opacity: 0; }
+          10%  { opacity: 1; }
+          100% { transform: translate3d(var(--wc-x,0), 90vh, 0) rotate(720deg); opacity: 0; }
+        }
+        .wc-goal-overlay {
+          position: fixed; inset: 0;
+          z-index: 9999;
+          pointer-events: none;
+          display: flex; align-items: center; justify-content: center;
+          background: radial-gradient(circle at center, rgba(0,0,0,0.35), rgba(0,0,0,0.05) 70%);
+        }
+        .wc-goal-card {
+          background: linear-gradient(135deg,#004c2b 0%, #006B3F 60%, #0a3a8a 100%);
+          border: 2px solid #FFDF00;
+          border-radius: 20px;
+          padding: 24px 32px;
+          text-align: center;
+          animation: wc-goal-in 0.5s cubic-bezier(.2,.9,.2,1.2) both, wc-goal-glow 1.6s ease-in-out infinite;
+          max-width: 92vw;
+        }
+        .wc-confetti-piece {
+          position: absolute; top: 0;
+          width: 8px; height: 14px;
+          animation: wc-confetti-fall linear forwards;
+          will-change: transform, opacity;
+          border-radius: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .wc-goal-card { animation: none !important; }
+          .wc-confetti-piece { display: none; }
+        }
+      `}</style>
+      <div className="wc-goal-overlay" role="status" aria-live="polite">
+        {confetti.map((_, i) => {
+          const colors = ['#009C3B', '#FFDF00', '#002776', '#ffffff'];
+          const c = colors[i % colors.length];
+          const left = Math.random() * 100;
+          const x = (Math.random() - 0.5) * 200;
+          const dur = 2 + Math.random() * 1.2;
+          const delay = Math.random() * 0.4;
+          return (
+            <span
+              key={i}
+              className="wc-confetti-piece"
+              style={{
+                left: `${left}%`,
+                background: c,
+                animationDuration: `${dur}s`,
+                animationDelay: `${delay}s`,
+                // @ts-expect-error css var
+                '--wc-x': `${x}px`,
+              }}
+            />
+          );
+        })}
+        <div className="wc-goal-card">
+          <div className="text-5xl sm:text-6xl mb-2">{msg.emoji}</div>
+          <div
+            className="text-3xl sm:text-4xl font-black tracking-wider"
+            style={{
+              color: '#FFDF00',
+              textShadow: '0 2px 12px rgba(0,0,0,0.5), 0 0 20px rgba(255,223,0,0.4)',
+              fontFamily: 'Poppins, sans-serif',
+            }}
+          >
+            {msg.title}
           </div>
-
-          <span className="wc-flag-wave" style={{ animationDelay: '0.5s' }}>🇧🇷</span>
+          <p className="mt-2 text-sm sm:text-base text-white/90 font-medium">
+            {msg.sub}
+          </p>
         </div>
       </div>
     </>
