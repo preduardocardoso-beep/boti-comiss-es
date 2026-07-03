@@ -128,11 +128,19 @@ export const Dashboard = ({
 
   return (
     <div className="space-y-6">
+      {/* Banner Copa (auto-remove após 19/07) */}
+      <WorldCupBanner />
+
+      {/* Celebrações de meta */}
+      <GoalCelebration tierName={iniciosTierName} storageKey="wc_celebrated_inicios" />
+      <GoalCelebration tierName={reiniciosTierName} storageKey="wc_celebrated_reinicios" />
+
       {/* Aviso informativo */}
       <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/60 border border-border text-xs text-muted-foreground">
         <span>⚠️</span>
         <span>Uso exclusivamente informativo — não substitui validação oficial de RV ou faturamento.</span>
       </div>
+
 
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
