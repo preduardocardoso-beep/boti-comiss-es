@@ -59,28 +59,56 @@ const ProgressCard = ({
   current: number;
   progress: number;
   tierName: string;
-}) => (
-  <div className="card-premium p-4 sm:p-5">
-    <div className="flex items-center justify-between mb-3">
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
-      <span className={`badge-faixa ${
-        tierName === 'Sonho Grande' ? 'bg-gold text-primary-foreground' :
-        tierName === 'Super Meta' ? 'bg-primary text-primary-foreground' :
-        tierName === 'Meta' ? 'bg-primary/80 text-primary-foreground' :
-        tierName === 'Gatilho' ? 'bg-primary/60 text-primary-foreground' :
-        'bg-muted text-muted-foreground'
-      }`}>
-        {tierName}
-      </span>
+}) => {
+  const wc = typeof window !== 'undefined' && isWorldCupActive();
+  const milestone =
+    wc && progress >= 90
+      ? '⚽ Falta muito pouco para marcar esse gol.'
+      : wc && progress >= 75
+      ? '🏁 Você está entrando na reta final rumo à vitória.'
+      : null;
+
+  return (
+    <div className="card-premium p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-medium text-muted-foreground">{label}</span>
+        <span className={`badge-faixa ${
+          tierName === 'Sonho Grande' ? 'bg-gold text-primary-foreground' :
+          tierName === 'Super Meta' ? 'bg-primary text-primary-foreground' :
+          tierName === 'Meta' ? 'bg-primary/80 text-primary-foreground' :
+          tierName === 'Gatilho' ? 'bg-primary/60 text-primary-foreground' :
+          'bg-muted text-muted-foreground'
+        }`}>
+          {tierName}
+        </span>
+      </div>
+      <div className="space-y-2">
+        <div className="relative">
+          <Progress value={progress} className="h-2.5" />
+          {wc && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-0 rounded-full"
+              style={{
+                width: `${Math.min(100, progress)}%`,
+                background:
+                  'linear-gradient(90deg, rgba(255,223,0,0) 0%, rgba(255,223,0,0.55) 60%, rgba(255,255,255,0.85) 100%)',
+                mixBlendMode: 'overlay',
+              }}
+            />
+          )}
+        </div>
+        <p className="text-right text-xs text-muted-foreground">
+          {progress.toFixed(0)}% da meta
+        </p>
+        {milestone && (
+          <p className="text-xs font-semibold text-primary">{milestone}</p>
+        )}
+      </div>
     </div>
-    <div className="space-y-2">
-      <Progress value={progress} className="h-2.5" />
-      <p className="text-right text-xs text-muted-foreground">
-        {progress.toFixed(0)}% da meta
-      </p>
-    </div>
-  </div>
-);
+  );
+};
+
 
 export const Dashboard = ({
   iniciosCount,
