@@ -1,6 +1,8 @@
 import { TrendingUp, Users, RefreshCw, Target, Award, Sparkles, CalendarDays } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { getCurrentCycle } from '@/lib/getCurrentCycle';
+import { WorldCupBanner, GoalCelebration, isWorldCupActive } from '@/components/WorldCupAnimation';
+
 
 interface DashboardProps {
   iniciosCount: number;
