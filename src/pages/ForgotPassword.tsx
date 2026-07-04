@@ -87,12 +87,12 @@ const ForgotPassword = () => {
             <div className="mx-auto w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
-            <h2 className="text-xl font-bold text-foreground">Email Enviado!</h2>
+            <h2 className="text-xl font-bold text-foreground">Solicitação Recebida</h2>
             <p className="text-muted-foreground">
-              Enviamos um link de recuperação para <strong className="text-foreground">{email}</strong>
+              Se <strong className="text-foreground">{email}</strong> estiver cadastrado, enviaremos um link para redefinir sua senha.
             </p>
             <p className="text-sm text-muted-foreground">
-              Verifique sua caixa de entrada e spam. O link expira em 1 hora.
+              Verifique sua caixa de entrada e a pasta de spam. O link expira em 1 hora.
             </p>
             <div className="pt-4 space-y-2">
               <Button
