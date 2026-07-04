@@ -260,8 +260,8 @@ const UpdatePassword = () => {
             
             {/* Password requirements */}
             <div className="text-xs text-muted-foreground space-y-1">
-              <p className={password.length >= 6 ? 'text-green-500' : ''}>
-                • Mínimo de 6 caracteres {password.length >= 6 && '✓'}
+              <p className={password.length >= 8 ? 'text-green-500' : ''}>
+                • Mínimo de 8 caracteres {password.length >= 8 && '✓'}
               </p>
               <p className={password && confirmPassword && password === confirmPassword ? 'text-green-500' : ''}>
                 • As senhas devem ser iguais {password && confirmPassword && password === confirmPassword && '✓'}
