@@ -49,10 +49,10 @@ const UpdatePassword = () => {
       return false;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       toast({
         title: 'Senha muito curta',
-        description: 'A senha deve ter pelo menos 6 caracteres.',
+        description: 'A senha deve ter pelo menos 8 caracteres.',
         variant: 'destructive',
       });
       return false;
@@ -207,7 +207,7 @@ const UpdatePassword = () => {
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 8 caracteres"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
@@ -260,8 +260,8 @@ const UpdatePassword = () => {
             
             {/* Password requirements */}
             <div className="text-xs text-muted-foreground space-y-1">
-              <p className={password.length >= 6 ? 'text-green-500' : ''}>
-                • Mínimo de 6 caracteres {password.length >= 6 && '✓'}
+              <p className={password.length >= 8 ? 'text-green-500' : ''}>
+                • Mínimo de 8 caracteres {password.length >= 8 && '✓'}
               </p>
               <p className={password && confirmPassword && password === confirmPassword ? 'text-green-500' : ''}>
                 • As senhas devem ser iguais {password && confirmPassword && password === confirmPassword && '✓'}

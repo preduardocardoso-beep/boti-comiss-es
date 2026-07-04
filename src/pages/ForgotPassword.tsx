@@ -53,26 +53,18 @@ const ForgotPassword = () => {
         redirectTo: `${window.location.origin}/update-password`,
       });
 
-      if (error) {
-        let errorMessage = error.message;
-        
-        // Friendly error messages
-        if (error.message.includes('rate limit')) {
-          errorMessage = 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
-        } else if (error.message.includes('not found')) {
-          errorMessage = 'Email não encontrado em nossa base de dados.';
-        }
-        
+      if (error && error.message.toLowerCase().includes('rate limit')) {
         toast({
-          title: 'Erro ao enviar email',
-          description: errorMessage,
+          title: 'Muitas tentativas',
+          description: 'Aguarde alguns minutos antes de tentar novamente.',
           variant: 'destructive',
         });
       } else {
+        // Always show a generic success message — never reveal whether the email is registered
         setEmailSent(true);
         toast({
-          title: 'Email enviado!',
-          description: 'Verifique seu e-mail para redefinir a senha.',
+          title: 'Solicitação recebida',
+          description: 'Se o e-mail estiver cadastrado, você receberá um link para redefinir sua senha.',
         });
       }
     } catch (err) {
@@ -95,12 +87,12 @@ const ForgotPassword = () => {
             <div className="mx-auto w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
-            <h2 className="text-xl font-bold text-foreground">Email Enviado!</h2>
+            <h2 className="text-xl font-bold text-foreground">Solicitação Recebida</h2>
             <p className="text-muted-foreground">
-              Enviamos um link de recuperação para <strong className="text-foreground">{email}</strong>
+              Se <strong className="text-foreground">{email}</strong> estiver cadastrado, enviaremos um link para redefinir sua senha.
             </p>
             <p className="text-sm text-muted-foreground">
-              Verifique sua caixa de entrada e spam. O link expira em 1 hora.
+              Verifique sua caixa de entrada e a pasta de spam. O link expira em 1 hora.
             </p>
             <div className="pt-4 space-y-2">
               <Button
