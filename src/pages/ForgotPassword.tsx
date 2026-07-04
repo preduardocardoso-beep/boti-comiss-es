@@ -53,26 +53,18 @@ const ForgotPassword = () => {
         redirectTo: `${window.location.origin}/update-password`,
       });
 
-      if (error) {
-        let errorMessage = error.message;
-        
-        // Friendly error messages
-        if (error.message.includes('rate limit')) {
-          errorMessage = 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
-        } else if (error.message.includes('not found')) {
-          errorMessage = 'Email não encontrado em nossa base de dados.';
-        }
-        
+      if (error && error.message.toLowerCase().includes('rate limit')) {
         toast({
-          title: 'Erro ao enviar email',
-          description: errorMessage,
+          title: 'Muitas tentativas',
+          description: 'Aguarde alguns minutos antes de tentar novamente.',
           variant: 'destructive',
         });
       } else {
+        // Always show a generic success message — never reveal whether the email is registered
         setEmailSent(true);
         toast({
-          title: 'Email enviado!',
-          description: 'Verifique seu e-mail para redefinir a senha.',
+          title: 'Solicitação recebida',
+          description: 'Se o e-mail estiver cadastrado, você receberá um link para redefinir sua senha.',
         });
       }
     } catch (err) {
