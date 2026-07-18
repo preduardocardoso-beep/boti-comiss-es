@@ -189,13 +189,13 @@ const Auth = () => {
                     Lembrar minha senha
                   </Label>
                 </div>
-                <Link to="/forgot-password" className="block">
+                <Link to="/reset-password-direct" className="block">
                   <Button
                     type="button"
-                    variant="link"
-                    className="w-full text-muted-foreground hover:text-primary"
+                    variant="outline"
+                    className="w-full"
                   >
-                    Esqueceu sua senha?
+                    Redefinir senha
                   </Button>
                 </Link>
               </form>
