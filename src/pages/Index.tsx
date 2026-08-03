@@ -141,7 +141,44 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Premium brand hero */}
+        <section className="hero-premium shadow-gold">
+          <img
+            src={premiumHero}
+            alt="Fundo premium com tons vinho, dourado e cores das marcas do Grupo Boticário"
+            className="absolute inset-0 h-full w-full object-cover"
+            width={1920}
+            height={640}
+          />
+          <div className="brand-strip absolute inset-x-0 top-0 h-1.5 z-20" />
+          <div className="relative z-10 px-5 sm:px-10 py-8 sm:py-12">
+            <p className="flex items-center gap-2 text-[0.7rem] sm:text-xs font-semibold uppercase tracking-[0.35em] text-gold">
+              <Sparkles className="h-3.5 w-3.5" />
+              Revendedores
+            </p>
+            <h1 className="mt-2 text-3xl sm:text-5xl font-bold leading-tight text-luxe">
+              Grupo Boticário
+            </h1>
+            <div className="hero-gold-line my-4 max-w-xs" />
+            <p className="max-w-lg text-sm sm:text-base text-white/80">
+              Painel premium de resultados — acompanhe inícios, reinícios e sua remuneração
+              variável com precisão a cada ciclo.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2 text-[0.65rem] sm:text-xs font-semibold uppercase tracking-widest text-white/70">
+              {['oBoticário', 'Eudora', 'Quem Disse, Berenice?', 'O.U.i', 'Australian Gold'].map((brand) => (
+                <span
+                  key={brand}
+                  className="rounded-full border border-gold/40 bg-white/5 px-3 py-1 backdrop-blur-sm"
+                >
+                  {brand}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <Dashboard
+
           iniciosCount={stats.iniciosCount}
           reiniciosCount={stats.reiniciosCount}
           iniciosCommission={stats.iniciosCommission}
