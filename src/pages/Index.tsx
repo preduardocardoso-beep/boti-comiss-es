@@ -15,8 +15,8 @@ import { CycleHistoryPanel } from '@/components/CycleHistoryPanel';
 import { WeeklyGoalPanel } from '@/components/WeeklyGoalPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays, History, CalendarRange, Sparkles } from 'lucide-react';
-import premiumHero from '@/assets/premium-hero.jpg';
+import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays, History, CalendarRange } from 'lucide-react';
+
 
 
 const Index = () => {
