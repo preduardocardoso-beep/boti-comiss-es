@@ -245,19 +245,39 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="projecao" className="space-y-6">
-            <FinancialProjection
-              currentInicios={data.inicios.length}
-              currentReinicios={data.reinicios.length}
-              inicioTierValue={stats.iniciosTier.value}
-              reinicioTierValue={stats.reiniciosTier.value}
-              iniciosMeta={data.config.iniciosMeta}
-              reiniciosMeta={data.config.reiniciosMeta}
-              nextInicioTierValue={nextInicioTierValue}
-              nextReinicioTierValue={nextReinicioTierValue}
-              sonhoGrandeInicioValue={sonhoGrandeInicioValue}
-              sonhoGrandeReinicioValue={sonhoGrandeReinicioValue}
-            />
+            <Tabs defaultValue="financeira" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="financeira" className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4" />
+                  Financeira
+                </TabsTrigger>
+                <TabsTrigger value="semanal" className="flex items-center gap-2">
+                  <CalendarRange className="h-4 w-4" />
+                  Meta Semanal
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="financeira">
+                <FinancialProjection
+                  currentInicios={data.inicios.length}
+                  currentReinicios={data.reinicios.length}
+                  inicioTierValue={stats.iniciosTier.value}
+                  reinicioTierValue={stats.reiniciosTier.value}
+                  iniciosMeta={data.config.iniciosMeta}
+                  reiniciosMeta={data.config.reiniciosMeta}
+                  nextInicioTierValue={nextInicioTierValue}
+                  nextReinicioTierValue={nextReinicioTierValue}
+                  sonhoGrandeInicioValue={sonhoGrandeInicioValue}
+                  sonhoGrandeReinicioValue={sonhoGrandeReinicioValue}
+                />
+              </TabsContent>
+
+              <TabsContent value="semanal">
+                <WeeklyGoalPanel inicios={data.inicios} reinicios={data.reinicios} />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
+
 
           <TabsContent value="historico">
             <CycleHistoryPanel history={history} onDelete={deleteHistory} />
