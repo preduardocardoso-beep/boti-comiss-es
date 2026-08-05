@@ -218,7 +218,10 @@ const Index = () => {
                   <Calculator className="h-4 w-4" />
                   Financeira
                 </TabsTrigger>
-                <TabsTrigger value="semanal" className="flex items-center gap-2">
+                <TabsTrigger
+                  value="semanal"
+                  className="flex items-center gap-2 data-[state=active]:gradient-gold data-[state=active]:text-white data-[state=active]:shadow-gold"
+                >
                   <CalendarRange className="h-4 w-4" />
                   Meta Semanal
                 </TabsTrigger>
