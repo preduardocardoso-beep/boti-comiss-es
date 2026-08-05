@@ -55,6 +55,12 @@ export default {
           DEFAULT: "hsl(var(--gold))",
           light: "hsl(var(--gold-light))",
         },
+        plum: {
+          DEFAULT: "hsl(var(--plum))",
+          deep: "hsl(var(--plum-deep))",
+        },
+        ember: "hsl(var(--ember))",
+
         success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
