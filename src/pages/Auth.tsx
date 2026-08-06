@@ -4,11 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import { LogIn, UserPlus, Loader2, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
-import loginLuxe from '@/assets/login-luxe.jpg';
+import { LogIn, UserPlus, Loader2 } from 'lucide-react';
 
 const Auth = () => {
   const [email, setEmail] = useState(() => localStorage.getItem('rv_saved_email') || '');
@@ -38,8 +38,8 @@ const Auth = () => {
     if (error) {
       toast({
         title: 'Erro ao entrar',
-        description: error.message === 'Invalid login credentials'
-          ? 'Email ou senha incorretos.'
+        description: error.message === 'Invalid login credentials' 
+          ? 'Email ou senha incorretos.' 
           : error.message,
         variant: 'destructive',
       });
@@ -110,83 +110,34 @@ const Auth = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      {/* Fundo ultrarrealista */}
-      <img
-        src={loginLuxe}
-        alt="Textura de seda em tom ameixa com detalhes dourados"
-        width={1280}
-        height={1600}
-        className="absolute inset-0 h-full w-full object-cover"
-      />
-      <div className="absolute inset-0 luxe-overlay" />
-      <div className="luxe-grain absolute inset-0" />
-
-      {/* Filete tricolor superior */}
-      <div className="absolute inset-x-0 top-0 h-[3px] brand-strip" />
-
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center justify-center gap-10 px-5 py-10 lg:flex-row lg:gap-16 lg:py-16">
-        {/* Lado editorial */}
-        <div className="w-full max-w-lg space-y-7 text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">
-            <Sparkles className="h-3.5 w-3.5" />
-            Edição Premium
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md card-premium">
+        <CardHeader className="text-center space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-xl gradient-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-2xl">RV</span>
           </div>
-
-          <h1 className="text-4xl font-bold leading-[1.1] sm:text-5xl lg:text-6xl">
-            <span className="text-luxe">Painel de Resultados</span>
-          </h1>
-
-          <div className="gold-hairline mx-auto h-px w-40 lg:mx-0" />
-
-          <p className="text-base leading-relaxed text-white/70 sm:text-lg">
-            Controle de comissões de Inícios e Reinícios com precisão, ciclos organizados
-            e projeções em tempo real.
-          </p>
-
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[
-              { icon: TrendingUp, label: 'Comissões em tempo real' },
-              { icon: ShieldCheck, label: 'Dados protegidos' },
-              { icon: Sparkles, label: 'Metas e projeções' },
-            ].map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="rounded-xl border border-white/10 bg-white/5 p-3 text-left backdrop-blur-sm"
-              >
-                <Icon className="mb-2 h-4 w-4 text-gold" />
-                <p className="text-xs font-medium leading-snug text-white/80">{label}</p>
-              </div>
-            ))}
+          <div>
+            <CardTitle className="text-2xl font-bold text-foreground">RV Promotor</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Controle de comissões - Grupo Boticário
+            </CardDescription>
           </div>
-        </div>
-
-        {/* Card de login */}
-        <div className="w-full max-w-md rounded-[1.75rem] p-7 luxe-glass sm:p-9">
-          <div className="mb-7 flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-gold/40 bg-gradient-to-br from-white/15 to-white/5 shadow-gold">
-              <span className="text-xl font-bold text-gold">RV</span>
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">Acesso do Promotor</h2>
-              <p className="text-xs text-white/60">Entre para continuar seu ciclo</p>
-            </div>
-          </div>
-
+        </CardHeader>
+        <CardContent>
           <Tabs defaultValue="login" className="space-y-6">
-            <TabsList className="grid h-12 w-full grid-cols-2 border border-white/10 bg-white/5 p-1">
-              <TabsTrigger
+            <TabsList className="grid w-full grid-cols-2 h-12 p-1 bg-muted/50">
+              <TabsTrigger 
                 value="login"
-                className="h-full font-medium text-white/70 data-[state=active]:bg-gold data-[state=active]:text-plum-deep"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full font-medium"
               >
-                <LogIn className="mr-2 h-4 w-4" />
+                <LogIn className="h-4 w-4 mr-2" />
                 Entrar
               </TabsTrigger>
-              <TabsTrigger
+              <TabsTrigger 
                 value="signup"
-                className="h-full font-medium text-white/70 data-[state=active]:bg-gold data-[state=active]:text-plum-deep"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground h-full font-medium"
               >
-                <UserPlus className="mr-2 h-4 w-4" />
+                <UserPlus className="h-4 w-4 mr-2" />
                 Cadastrar
               </TabsTrigger>
             </TabsList>
@@ -194,9 +145,7 @@ const Auth = () => {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email" className="text-xs uppercase tracking-wider text-white/60">
-                    Email
-                  </Label>
+                  <Label htmlFor="login-email">Email</Label>
                   <Input
                     id="login-email"
                     type="email"
@@ -204,13 +153,10 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading}
-                    className="h-12 luxe-field"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password" className="text-xs uppercase tracking-wider text-white/60">
-                    Senha
-                  </Label>
+                  <Label htmlFor="login-password">Senha</Label>
                   <Input
                     id="login-password"
                     type="password"
@@ -218,18 +164,17 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
-                    className="h-12 luxe-field"
                   />
                 </div>
-                <Button type="submit" className="h-12 w-full btn-luxe" disabled={loading}>
+                <Button type="submit" className="w-full h-12" disabled={loading}>
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Entrando...
                     </>
                   ) : (
                     <>
-                      <LogIn className="mr-2 h-4 w-4" />
+                      <LogIn className="h-4 w-4 mr-2" />
                       Entrar
                     </>
                   )}
@@ -239,9 +184,8 @@ const Auth = () => {
                     id="remember-me"
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
-                    className="border-white/30 data-[state=checked]:bg-gold data-[state=checked]:text-plum-deep"
                   />
-                  <Label htmlFor="remember-me" className="cursor-pointer text-sm text-white/70">
+                  <Label htmlFor="remember-me" className="text-sm text-muted-foreground cursor-pointer">
                     Lembrar minha senha
                   </Label>
                 </div>
@@ -249,7 +193,7 @@ const Auth = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full border-gold/40 bg-transparent text-gold hover:bg-gold/10 hover:text-gold"
+                    className="w-full"
                   >
                     Redefinir senha
                   </Button>
@@ -260,9 +204,7 @@ const Auth = () => {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email" className="text-xs uppercase tracking-wider text-white/60">
-                    Email
-                  </Label>
+                  <Label htmlFor="signup-email">Email</Label>
                   <Input
                     id="signup-email"
                     type="email"
@@ -270,13 +212,10 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading}
-                    className="h-12 luxe-field"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password" className="text-xs uppercase tracking-wider text-white/60">
-                    Senha
-                  </Label>
+                  <Label htmlFor="signup-password">Senha</Label>
                   <Input
                     id="signup-password"
                     type="password"
@@ -284,18 +223,17 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
-                    className="h-12 luxe-field"
                   />
                 </div>
-                <Button type="submit" className="h-12 w-full btn-luxe" disabled={loading}>
+                <Button type="submit" className="w-full h-12" disabled={loading}>
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Cadastrando...
                     </>
                   ) : (
                     <>
-                      <UserPlus className="mr-2 h-4 w-4" />
+                      <UserPlus className="h-4 w-4 mr-2" />
                       Criar conta
                     </>
                   )}
@@ -303,12 +241,8 @@ const Auth = () => {
               </form>
             </TabsContent>
           </Tabs>
-
-          <p className="mt-7 text-center text-[11px] leading-relaxed text-white/45">
-            Uso exclusivamente informativo — não substitui validação oficial de RV ou faturamento.
-          </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
