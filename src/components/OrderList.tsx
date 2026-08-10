@@ -5,7 +5,7 @@ import { OrderRecord } from '@/types/commission';
 interface OrderListProps {
   orders: OrderRecord[];
   onRemove: (id: string) => void;
-  type: 'inicio' | 'reinicio';
+  type: 'inicio' | 'inicio_off' | 'reinicio';
 }
 
 export const OrderList = ({ orders, onRemove, type }: OrderListProps) => {
@@ -21,7 +21,7 @@ export const OrderList = ({ orders, onRemove, type }: OrderListProps) => {
     return (
       <div className="card-premium p-8 text-center">
         <p className="text-muted-foreground">
-          Nenhum {type === 'inicio' ? 'início' : 'reinício'} registrado neste ciclo.
+          Nenhum {type === 'inicio' ? 'início' : type === 'inicio_off' ? 'início off' : 'reinício'} registrado neste ciclo.
         </p>
       </div>
     );
@@ -42,8 +42,13 @@ export const OrderList = ({ orders, onRemove, type }: OrderListProps) => {
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-foreground truncate">
+              <p className="font-medium text-foreground truncate flex items-center gap-2">
                 {order.clientName}
+                {order.isOff && (
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-gold/20 text-gold-foreground border border-gold/40">
+                    OFF
+                  </span>
+                )}
               </p>
               <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1">

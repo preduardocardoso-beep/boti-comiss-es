@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { OrderRecord } from '@/types/commission';
 
-type OrderType = 'inicio' | 'reinicio';
+type OrderType = 'inicio' | 'inicio_off' | 'reinicio';
 
 interface OrderFormProps {
   onSubmit: (clientName: string, orderNumber: string, resellerCode: string) => void;
@@ -23,6 +23,12 @@ const EMPTY_DRAFT: OrderDraft = {
   clientName: '',
   orderNumber: '',
   resellerCode: '',
+};
+
+const LABELS: Record<OrderType, string> = {
+  inicio: 'Início',
+  inicio_off: 'Início Off',
+  reinicio: 'Reinício',
 };
 
 const getDraftKey = (type: OrderType) => `rv_order_form_draft_${type}`;
@@ -151,7 +157,7 @@ export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) =>
     }
 
     toast({
-      title: type === 'inicio' ? 'Início registrado!' : 'Reinício registrado!',
+      title: `${LABELS[type]} registrado!`,
       description: `Pedido de ${clientName.trim()} adicionado com sucesso.`,
     });
   };
@@ -160,7 +166,7 @@ export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) =>
     <form onSubmit={handleSubmit} className="card-premium p-6 space-y-4">
       <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
         <Plus className="h-5 w-5 text-primary" />
-        Novo {type === 'inicio' ? 'Início' : 'Reinício'}
+        Novo {LABELS[type]}
       </h3>
 
 
@@ -218,7 +224,7 @@ export const OrderForm = ({ onSubmit, type, existingOrders }: OrderFormProps) =>
       <div className="flex flex-col sm:flex-row gap-3">
         <Button type="submit" className="w-full h-11 text-base font-semibold">
           <Plus className="h-4 w-4 mr-2" />
-          Registrar {type === 'inicio' ? 'Início' : 'Reinício'}
+          Registrar {LABELS[type]}
         </Button>
 
         <Button type="button" variant="outline" onClick={handleClearForm} className="w-full sm:w-auto h-11">

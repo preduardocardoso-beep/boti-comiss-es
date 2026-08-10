@@ -4,6 +4,7 @@ export interface OrderRecord {
   orderNumber: string;
   resellerCode: string;
   date: string;
+  isOff?: boolean;
 }
 
 export interface CommissionTier {
