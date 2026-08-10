@@ -1,11 +1,22 @@
-import { FileSpreadsheet } from 'lucide-react';
+import { FileSpreadsheet, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import { OrderRecord, CommissionTier } from '@/types/commission';
 
+type ReportScope = 'todos' | 'inicio' | 'inicio_off';
+
 interface ExportButtonProps {
   inicios: OrderRecord[];
+  iniciosNormal?: OrderRecord[];
+  iniciosOff?: OrderRecord[];
   reinicios: OrderRecord[];
   iniciosTiers: CommissionTier[];
   reiniciosTiers: CommissionTier[];
@@ -17,6 +28,8 @@ interface ExportButtonProps {
     totalCommission: number;
     iniciosTierName: string;
     reiniciosTierName: string;
+    iniciosNormalCount?: number;
+    iniciosOffCount?: number;
   };
   config: {
     iniciosMeta: number;
@@ -26,6 +39,8 @@ interface ExportButtonProps {
 
 export const ExportButton = ({
   inicios,
+  iniciosNormal,
+  iniciosOff,
   reinicios,
   iniciosTiers,
   reiniciosTiers,
@@ -35,7 +50,10 @@ export const ExportButton = ({
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-  const handleExport = () => {
+  const listNormal = iniciosNormal ?? inicios.filter((r) => !r.isOff);
+  const listOff = iniciosOff ?? inicios.filter((r) => r.isOff);
+
+  const handleExport = (scope: ReportScope = 'todos') => {
     const workbook = XLSX.utils.book_new();
 
     // Sheet 1: Resumo Geral
@@ -45,7 +63,9 @@ export const ExportButton = ({
       ['Data do Relatório', new Date().toLocaleDateString('pt-BR')],
       [''],
       ['RESUMO DO CICLO'],
-      ['Total de Inícios', stats.iniciosCount],
+      ['Total de Inícios (Normal + Off)', stats.iniciosCount],
+      ['Inícios Normais', stats.iniciosNormalCount ?? listNormal.length],
+      ['Inícios Off', stats.iniciosOffCount ?? listOff.length],
       ['Faixa Inícios', stats.iniciosTierName],
       ['Comissão Inícios', formatCurrency(stats.iniciosCommission)],
       [''],
@@ -58,15 +78,38 @@ export const ExportButton = ({
       ['METAS DO CICLO'],
       ['Meta Inícios', config.iniciosMeta],
       ['Meta Reinícios', config.reiniciosMeta],
+      [''],
+      ['FILTRO DO RELATÓRIO', scope === 'todos' ? 'Todos os Inícios' : scope === 'inicio' ? 'Apenas Início Normal' : 'Apenas Início Off'],
     ];
     const resumoSheet = XLSX.utils.aoa_to_sheet(resumoData);
     XLSX.utils.book_append_sheet(workbook, resumoSheet, 'Resumo');
 
-    // Sheet 2: Inícios
-    const iniciosHeader = [['Nome do Cliente', 'Número do Pedido', 'Data']];
-    const iniciosRows = inicios.map((r) => [r.clientName, r.orderNumber, r.date]);
-    const iniciosSheet = XLSX.utils.aoa_to_sheet([...iniciosHeader, ...iniciosRows]);
-    XLSX.utils.book_append_sheet(workbook, iniciosSheet, 'Inícios');
+    // Sheet 2: Inícios (conforme filtro)
+    const iniciosHeader = [['Tipo', 'Nome do Cliente', 'Código do Revendedor', 'Número do Pedido', 'Data']];
+    const toRows = (rows: OrderRecord[]) =>
+      rows.map((r) => [r.isOff ? 'Início Off' : 'Início', r.clientName, r.resellerCode || '-', r.orderNumber, r.date]);
+
+    if (scope === 'todos' || scope === 'inicio') {
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.aoa_to_sheet([...iniciosHeader, ...toRows(listNormal)]),
+        'Inícios Normais'
+      );
+    }
+    if (scope === 'todos' || scope === 'inicio_off') {
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.aoa_to_sheet([...iniciosHeader, ...toRows(listOff)]),
+        'Inícios Off'
+      );
+    }
+    if (scope === 'todos') {
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.aoa_to_sheet([...iniciosHeader, ...toRows(inicios)]),
+        'Inícios (Geral)'
+      );
+    }
 
     // Sheet 3: Reinícios
     const reiniciosHeader = [['Nome do Cliente', 'Número do Pedido', 'Data']];
@@ -95,7 +138,8 @@ export const ExportButton = ({
     XLSX.utils.book_append_sheet(workbook, gatilhosReiniciosSheet, 'Gatilhos Reinícios');
 
     // Download
-    const fileName = `Relatorio_RV_Promotor_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const suffix = scope === 'inicio' ? '_Inicio_Normal' : scope === 'inicio_off' ? '_Inicio_Off' : '';
+    const fileName = `Relatorio_RV_Promotor${suffix}_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, fileName);
 
     toast({
@@ -105,9 +149,22 @@ export const ExportButton = ({
   };
 
   return (
-    <Button onClick={handleExport} variant="outline" className="gap-2">
-      <FileSpreadsheet className="h-4 w-4" />
-      Exportar Excel
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="gap-2">
+          <FileSpreadsheet className="h-4 w-4" />
+          <span className="hidden sm:inline">Exportar Excel</span>
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuLabel>Relatórios</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => handleExport('todos')}>
+          Geral (Início + Início Off)
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleExport('inicio')}>Apenas Início Normal</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleExport('inicio_off')}>Apenas Início Off</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

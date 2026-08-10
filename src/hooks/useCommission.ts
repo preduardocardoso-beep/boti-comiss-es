@@ -31,7 +31,8 @@ export const calculateCommission = (count: number, tiers: CommissionTier[]): num
 export const useCommission = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [inicios, setInicios] = useState<OrderRecord[]>([]);
+  const [iniciosNormal, setIniciosNormal] = useState<OrderRecord[]>([]);
+  const [iniciosOff, setIniciosOff] = useState<OrderRecord[]>([]);
   const [reinicios, setReinicios] = useState<OrderRecord[]>([]);
   const [config, setConfig] = useState<CycleConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
@@ -91,15 +92,16 @@ export const useCommission = () => {
         .order('created_at', { ascending: false });
 
       if (ordersData) {
-        const iniciosData = ordersData
-          .filter((o) => o.type === 'inicio')
-          .map((o) => ({
-            id: o.id,
-            clientName: o.client_name,
-            orderNumber: o.order_number,
-            resellerCode: o.reseller_code || '',
-            date: o.created_at.split('T')[0],
-          }));
+        const mapOrder = (o: typeof ordersData[number], isOff = false) => ({
+          id: o.id,
+          clientName: o.client_name,
+          orderNumber: o.order_number,
+          resellerCode: o.reseller_code || '',
+          date: o.created_at.split('T')[0],
+          isOff,
+        });
+        const iniciosData = ordersData.filter((o) => o.type === 'inicio').map((o) => mapOrder(o));
+        const iniciosOffData = ordersData.filter((o) => o.type === 'inicio_off').map((o) => mapOrder(o, true));
         const reiniciosData = ordersData
           .filter((o) => o.type === 'reinicio')
           .map((o) => ({
@@ -109,7 +111,8 @@ export const useCommission = () => {
             resellerCode: o.reseller_code || '',
             date: o.created_at.split('T')[0],
           }));
-        setInicios(iniciosData);
+        setIniciosNormal(iniciosData);
+        setIniciosOff(iniciosOffData);
         setReinicios(reiniciosData);
       }
 
@@ -119,43 +122,63 @@ export const useCommission = () => {
     fetchData();
   }, [user]);
 
-  const addInicio = useCallback(async (clientName: string, orderNumber: string, resellerCode: string = '') => {
-    if (!user) return;
+  const addOrderOfType = useCallback(
+    async (
+      type: 'inicio' | 'inicio_off',
+      clientName: string,
+      orderNumber: string,
+      resellerCode: string = ''
+    ) => {
+      if (!user) return;
 
-    const { data, error } = await supabase
-      .from('orders')
-      .insert({
-        user_id: user.id,
-        type: 'inicio',
-        client_name: clientName.trim(),
-        order_number: orderNumber.trim(),
-        reseller_code: resellerCode.trim(),
-      })
-      .select()
-      .single();
+      const { data, error } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          type,
+          client_name: clientName.trim(),
+          order_number: orderNumber.trim(),
+          reseller_code: resellerCode.trim(),
+        })
+        .select()
+        .single();
 
-    if (error) {
-      toast({
-        title: 'Erro ao adicionar',
-        description: error.message,
-        variant: 'destructive',
-      });
-      return;
-    }
+      if (error) {
+        toast({
+          title: 'Erro ao adicionar',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
 
-    if (data) {
-      setInicios((prev) => [
-        {
+      if (data) {
+        const record: OrderRecord = {
           id: data.id,
           clientName: data.client_name,
           orderNumber: data.order_number,
           resellerCode: data.reseller_code || '',
           date: data.created_at.split('T')[0],
-        },
-        ...prev,
-      ]);
-    }
-  }, [user, toast]);
+          isOff: type === 'inicio_off',
+        };
+        const setter = type === 'inicio_off' ? setIniciosOff : setIniciosNormal;
+        setter((prev) => [record, ...prev]);
+      }
+    },
+    [user, toast]
+  );
+
+  const addInicio = useCallback(
+    (clientName: string, orderNumber: string, resellerCode: string = '') =>
+      addOrderOfType('inicio', clientName, orderNumber, resellerCode),
+    [addOrderOfType]
+  );
+
+  const addInicioOff = useCallback(
+    (clientName: string, orderNumber: string, resellerCode: string = '') =>
+      addOrderOfType('inicio_off', clientName, orderNumber, resellerCode),
+    [addOrderOfType]
+  );
 
   const addReinicio = useCallback(async (clientName: string, orderNumber: string, resellerCode: string = '') => {
     if (!user) return;
@@ -207,7 +230,8 @@ export const useCommission = () => {
       return;
     }
 
-    setInicios((prev) => prev.filter((r) => r.id !== id));
+    setIniciosNormal((prev) => prev.filter((r) => r.id !== id));
+    setIniciosOff((prev) => prev.filter((r) => r.id !== id));
   }, [toast]);
 
   const removeReinicio = useCallback(async (id: string) => {
@@ -271,9 +295,16 @@ export const useCommission = () => {
       return;
     }
 
-    setInicios([]);
+    setIniciosNormal([]);
+    setIniciosOff([]);
     setReinicios([]);
   }, [user, toast]);
+
+  // Início + Início Off = total de Inícios
+  const inicios = useMemo(
+    () => [...iniciosNormal, ...iniciosOff].sort((a, b) => (a.date < b.date ? 1 : -1)),
+    [iniciosNormal, iniciosOff]
+  );
 
   const stats = useMemo(() => {
     const iniciosCount = inicios.length;
@@ -307,14 +338,17 @@ export const useCommission = () => {
       reiniciosProgress,
       iniciosTiers,
       reiniciosTiers,
+      iniciosNormalCount: iniciosNormal.length,
+      iniciosOffCount: iniciosOff.length,
     };
-  }, [inicios, reinicios, config]);
+  }, [inicios, iniciosNormal, iniciosOff, reinicios, config]);
 
   return {
-    data: { inicios, reinicios, config },
+    data: { inicios, iniciosNormal, iniciosOff, reinicios, config },
     stats,
     loading,
     addInicio,
+    addInicioOff,
     addReinicio,
     removeInicio,
     removeReinicio,

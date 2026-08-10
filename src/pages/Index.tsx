@@ -15,7 +15,7 @@ import { CycleHistoryPanel } from '@/components/CycleHistoryPanel';
 import { WeeklyGoalPanel } from '@/components/WeeklyGoalPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays, History, CalendarRange } from 'lucide-react';
+import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays, History, CalendarRange, UserPlus } from 'lucide-react';
 
 
 
@@ -27,6 +27,7 @@ const Index = () => {
     stats, 
     loading: dataLoading, 
     addInicio, 
+    addInicioOff,
     addReinicio, 
     removeInicio, 
     removeReinicio,
@@ -106,6 +107,8 @@ const Index = () => {
         <div className="container mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
           <ExportButton 
             inicios={data.inicios}
+            iniciosNormal={data.iniciosNormal}
+            iniciosOff={data.iniciosOff}
             reinicios={data.reinicios}
             iniciosTiers={stats.iniciosTiers}
             reiniciosTiers={stats.reiniciosTiers}
@@ -117,6 +120,8 @@ const Index = () => {
               totalCommission: stats.totalCommission,
               iniciosTierName: stats.iniciosTier.name,
               reiniciosTierName: stats.reiniciosTier.name,
+              iniciosNormalCount: stats.iniciosNormalCount,
+              iniciosOffCount: stats.iniciosOffCount,
             }}
             config={{
               iniciosMeta: data.config.iniciosMeta,
@@ -155,13 +160,19 @@ const Index = () => {
           reiniciosProgress={stats.reiniciosProgress}
           iniciosTierName={stats.iniciosTier.name}
           reiniciosTierName={stats.reiniciosTier.name}
+          iniciosNormalCount={stats.iniciosNormalCount}
+          iniciosOffCount={stats.iniciosOffCount}
         />
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-6 mb-6">
             <TabsTrigger value="inicios" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Inícios</span>
+            </TabsTrigger>
+            <TabsTrigger value="inicios_off" className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              <span className="hidden sm:inline">Início Off</span>
             </TabsTrigger>
             <TabsTrigger value="reinicios" className="flex items-center gap-2">
               <RefreshCw className="h-4 w-4" />
@@ -193,7 +204,22 @@ const Index = () => {
                 cycleMeta={data.config.iniciosMeta}
               />
             </div>
-            <OrderList orders={data.inicios} onRemove={removeInicio} type="inicio" />
+            <OrderList orders={data.iniciosNormal} onRemove={removeInicio} type="inicio" />
+          </TabsContent>
+
+          <TabsContent value="inicios_off" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              <OrderForm onSubmit={addInicioOff} type="inicio_off" existingOrders={[...data.inicios, ...data.reinicios]} />
+              <CommissionSummary 
+                count={data.inicios.length}
+                tier={stats.iniciosTier}
+                tiers={stats.iniciosTiers}
+                commission={stats.iniciosCommission}
+                type="inicio"
+                cycleMeta={data.config.iniciosMeta}
+              />
+            </div>
+            <OrderList orders={data.iniciosOff} onRemove={removeInicio} type="inicio_off" />
           </TabsContent>
 
           <TabsContent value="reinicios" className="space-y-6">

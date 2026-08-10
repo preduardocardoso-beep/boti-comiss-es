@@ -14,6 +14,8 @@ interface DashboardProps {
   reiniciosProgress: number;
   iniciosTierName: string;
   reiniciosTierName: string;
+  iniciosNormalCount?: number;
+  iniciosOffCount?: number;
 }
 
 const StatCard = ({
@@ -120,6 +122,8 @@ export const Dashboard = ({
   reiniciosProgress,
   iniciosTierName,
   reiniciosTierName,
+  iniciosNormalCount,
+  iniciosOffCount,
 }: DashboardProps) => {
   const formatCurrency = (value: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -170,7 +174,11 @@ export const Dashboard = ({
           icon={Users}
           label="Inícios"
           value={iniciosCount}
-          sublabel="no ciclo"
+          sublabel={
+            iniciosOffCount !== undefined && iniciosNormalCount !== undefined
+              ? `Normal: ${iniciosNormalCount} • Off: ${iniciosOffCount}`
+              : 'no ciclo'
+          }
         />
         <StatCard
           icon={TrendingUp}
