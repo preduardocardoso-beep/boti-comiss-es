@@ -170,10 +170,13 @@ const Index = () => {
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Inícios</span>
             </TabsTrigger>
-            <TabsTrigger value="inicios_off" className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4" />
+            <TabsTrigger value="inicios_off" className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-gold/20 text-gold-foreground border border-gold/40 leading-none">
+                IN OFF
+              </span>
               <span className="hidden sm:inline">Início Off</span>
             </TabsTrigger>
+
             <TabsTrigger value="reinicios" className="flex items-center gap-2">
               <RefreshCw className="h-4 w-4" />
               <span className="hidden sm:inline">Reinícios</span>
