@@ -15,7 +15,7 @@ import { CycleHistoryPanel } from '@/components/CycleHistoryPanel';
 import { WeeklyGoalPanel } from '@/components/WeeklyGoalPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays, History, CalendarRange, UserPlus } from 'lucide-react';
+import { LogOut, Loader2, Users, RefreshCw, Settings, Calculator, CalendarDays, History, CalendarRange } from 'lucide-react';
 
 
 
